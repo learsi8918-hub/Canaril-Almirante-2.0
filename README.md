@@ -4,7 +4,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
-*   **📦 Distribuição Física Nativa (Releases APK):** Sistema de compilação automatizado integrado diretamente ao painel de Releases do GitHub, operando com chaves de permissão restritas de gravação (`permissions: contents: write`). O aplicativo compila os binários em modo sanduíche e disponibiliza um link direto de download do arquivo **APK** para smartphones Android.
+*   **📦 Compilação Automatizada de Binários (Nuvem APK):** Pipeline de Integração Contínua (CI/CD) operando sob o motor v4 de upload do GitHub Actions. O sistema executa testes ornitológicos em ambiente virtualizado isolado e gera o instalador móvel nativo (**APK**) disparado por Commits, Tags de versão ou acionamento manual.
 *   **🎨 Customização Dinâmica por Identidade Visual:** Cadastro completo do Perfil do Criador contendo nome, clube associado (opcional), cidade, estado e até 4 raças focais do criatório. O sistema lê o arquivo de logo do canaril anexado para extrair e reconfigurar as paletas de cores internas do aplicativo dinamicamente.
 *   **🌳 Rastreabilidade e Árvore Genealógica:** Banco de dados expandido com suporte a filiação direta (`idPaiAnilha` e `idMaeAnilha`). Implementação de algoritmos de busca recursiva capazes de compilar e exportar árvores genealógicas completas para emissão de certificados de linhagem.
 *   **🛒 Rastreamento Avançado de Origem de Plantel:** Registro minucioso sobre a procedência de novas matrizes inseridas no plantel, com campos para identificar se o pássaro é nascido no criatório, adquirido de terceiros (com especificação do clube e nome do canaril) ou comprado em pet shops/lojas comerciais.
@@ -19,7 +19,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 ```text
 canary_control_pro/
 ├── .github/workflows/       # 🚀 Configurações de compilação em nuvem (CI/CD)
-│   └── build_app.yml             # Script v4 corrigido com travas de escrita e liberação de APK nas Releases
+│   └── build_app.yml             # Script v4 de automação de testes e geração de APK via Commits ou Tags
 ├── assets/                  # Armazenamento de mídias e fotos do plantel (.gitkeep)
 ├── lib/
 │   ├── database/            # Camada de Persistência Local Segura (SQLite V2)
