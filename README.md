@@ -4,6 +4,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
+*   **🗄️ Persistência Local Total (SQLite Offline):** Integração nativa com o motor de banco de dados SQLite. Todos os canários, prontuários e chocos ficam salvos em segurança na memória interna do smartphone do criador, garantindo funcionamento 100% offline dentro do criatório.
 *   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
 *   **📊 Ranking de Fertilidade Dinâmico:** Dashboard analítico que calcula de forma automática a taxa de fertilidade com base nos getters reais de `Ovos Galados` / `Ovos Totais`, gerando uma classificação instantânea dos melhores reprodutores e matrizes do plantel.
 *   **🏥 Prontuário Clínico Digital:** Módulo avançado para monitoramento de sintomas e doenças comuns (como Peito Seco/Coccidiose e Ácaro de Traqueia), histórico de tratamentos ministrados com controle rigoroso de dosagens e status clínico (Em Tratamento, Curado ou Óbito).
@@ -23,8 +24,10 @@ A estrutura de arquivos do projeto está organizada de forma a isolar as respons
 canary_control_pro/
 ├── assets/                  # Armazenamento de mídias e fotos do plantel (.gitkeep)
 ├── lib/
+│   ├── database/            # Camada de Persistência Local Segura (SQLite)
+│   │   └── db_helper.dart        # Inicialização do banco de dados e operações CRUD nativas
 │   ├── models/              # Camada de Dados, Getters e Regras de Negócio Nativas
-│   │   ├── ave_model.dart        # Cadastro de aves, mutações FOB, portadores e controle de baixas
+│   │   ├── ave_model.dart        # Cadastro de aves, mutações FOB, portadores e serialização para SQLite
 │   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco
 │   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos
 │   ├── screens/             # Camada Visual (Interface Gráfica com o Criador)
@@ -34,7 +37,7 @@ canary_control_pro/
 │   │   ├── navigation_screen.dart# Controlador central do menu inferior (Abas)
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
-└── pubspec.yaml             # Arquivo de configuração de pacotes, dependências e SDK do Flutter
+└── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
 
 ## 🎨 Identidade Visual e Interface
@@ -45,5 +48,5 @@ O aplicativo foi projetado sob as diretrizes do Material Design em **Dark Mode**
 
 *   **Flutter SDK:** `>= 3.0.0`
 *   **Dart Language:** `>= 3.0.0 < 4.0.0`
-*   **Dependências:** `cupertino_icons` para elementos visuais nativos e regras de análise lint ativas (`flutter_lints`).
+*   **Dependências Principais:** `sqflite` (Banco de dados), `path` (Diretórios do sistema), `cupertino_icons` (Ícones).
 *   
