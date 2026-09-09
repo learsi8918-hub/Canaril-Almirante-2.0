@@ -3,6 +3,7 @@ import 'dashboard_screen.dart';
 import 'ciclo_screen.dart';
 import 'saude_screen.dart';
 import 'baixa_screen.dart';
+import 'exportacao_screen.dart'; // Importando a nova tela de relatórios
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({Key? key}) : super(key: key);
@@ -14,12 +15,13 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   int _indiceAtual = 0;
 
-  // Lista de telas modulares que criamos no repositório
+  // Lista expandida com as 5 tabelas/telas do ecossistema do Canaril
   final List<Widget> _telas = [
     const DashboardScreen(),
     const CicloScreen(),
     const SaudeScreen(),
     const BaixaScreen(),
+    const ExportacaoScreen(),
   ];
 
   @override
@@ -27,7 +29,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _indiceAtual,
-        children: _telas, // Mantém o estado de cada tela ativo ao alternar
+        children: _telas, // Preserva o preenchimento dos formulários ao alternar de aba
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _indiceAtual,
@@ -36,12 +38,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
             _indiceAtual = index;
           });
         },
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed, // Permite mais de 3 abas sem esconder os textos
         backgroundColor: const Color(0xFF1E1E1E),
-        selectedItemColor: const Color(0xFFFFD700), // Amarelo Canário
+        selectedItemColor: const Color(0xFFFFD700), // Amarelo Canário Canônico
         unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+        unselectedLabelStyle: const TextStyle(fontSize: 10),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.science_outlined),
@@ -62,6 +64,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
             icon: Icon(Icons.gavel_outlined),
             activeIcon: Icon(Icons.gavel),
             label: 'Baixas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined),
+            activeIcon: Icon(Icons.analytics),
+            label: 'Relatórios',
           ),
         ],
       ),
