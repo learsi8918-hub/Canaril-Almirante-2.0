@@ -2,7 +2,7 @@ name: 🚀 Compilar CanaryControl Pro (Instalação e Testes)
 
 on:
   push:
-    branches: [ main ] # Dispara a compilação sempre que você atualizar o código
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -11,38 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Baixa o código do seu repositório para a máquina virtual do GitHub
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4 # Atualizado para v4
 
-    # 2. Configura o ambiente de execução do Java (Requisito do Android)
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4 # Atualizado para v4
       with:
-        distribution: 'zulu'
+        distribution: 'temurin'
         java-version: '17'
 
-    # 3. Configura o Flutter estável na nuvem do GitHub
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
 
-    # 4. Baixa as dependências do SQLite e ícones mapeados no seu pubspec.yaml
     - name: Instalar Dependências
       run: flutter pub get
 
-    # 5. Executa os testes automatizados de fertilidade e choco que programamos
     - name: Executar Testes Unitários
       run: flutter test
 
-    # 6. Compila o aplicativo gerando o arquivo APK pronto para instalar no seu celular
     - name: Compilar APK de Testes
-      run: flutter build apk --debug # Compila em modo debug para facilitar o rastreamento de erros
+      run: flutter build apk --debug
 
-    # 7. Disponibiliza o arquivo .apk para você baixar direto pelo site do GitHub
+    # Sistema de Upload v4 corrigido com busca dinâmica por arquivos .apk
     - name: Disponibilizar Instalador (.APK)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4 
       with:
         name: canary-control-pro-teste
         path: build/app/outputs/flutter-apk/app-debug.apk
+        if-no-files-found: error # Faz a automação falhar explicitamente caso não ache o arquivo
         
