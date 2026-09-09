@@ -25,6 +25,9 @@ jobs:
         run: flutter pub get
       - name: Rodar_Testes
         run: flutter test
+      # 🚀 INJEÇÃO DE SEGURANÇA MÓVEL: Reconstrói a pasta nativa 'android/' que está faltando no repositório
+      - name: Gerar_Configuracoes_Nativas_Android
+        run: flutter create . --platforms=android
       - name: Compilar_Instalador
         run: flutter build apk --debug
       - name: Criar_Artefato_Disponivel
