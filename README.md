@@ -4,6 +4,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
+*   **🔐 Portal de Entrada com Autenticação:** Barreira de segurança (`LoginScreen`) com validação de credenciais do criador em tempo real (máscara de e-mail e tamanho mínimo de senha). Bloqueia acessos indevidos e utiliza navegação com substituição de rota (`pushReplacement`) para blindar o sistema contra retrocessos acidentais.
 *   **📊 Central de Exportação de Dados:** Módulo analítico capaz de compilar dados complexos do banco de dados em arquivos formatados estruturados (padrão CSV). Permite extrair relatórios de auditoria ornitológica de matrizes ativas, taxas de fertilidade acumuladas e histórico financeiro de saídas.
 *   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
 *   **🧪 Suite de Testes Automatizados:** Cobertura de testes unitários (`flutter_test`) na raiz do projeto para validar algoritmos de cálculo de fertilidade, prevenções de erros matemáticos (divisão por zero) e precisão na geração dos cronogramas biológicos de choco de 13 dias.
@@ -16,7 +17,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
     *   *13º Dia:* Previsão exata do nascimento dos filhotes
     *   *18º Dia:* Período ideal para anilhamento oficial
 *   **🍂 Registro de Baixas do Plantel:** Módulo especializado para controle rigoroso do inventário e ciclo de vida das aves. Registra as saídas do criatório categorizadas por motivo comercial ou clínico (Venda com valor/comprador, Doação ou Óbito detalhado), permitindo futuras auditorias de mortalidade e faturamento.
-*   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` de 5 posições acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todos as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado de carregamento das telas.
+*   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` de 5 posições acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todas as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado de carregamento das telas.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
 
@@ -37,6 +38,7 @@ canary_control_pro/
 │   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
 │   │   ├── dashboard_screen.dart # Simulador genético e ranking de reprodutores
 │   │   ├── exportacao_screen.dart# Painel de compilação de relatórios e exportação CSV
+│   │   ├── login_screen.dart     # Tela de login e autenticação com validação de chaves
 │   │   ├── navigation_screen.dart# Controlador central do menu inferior (Abas)
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
@@ -53,7 +55,7 @@ canary_control_pro/
 
 ## 🎨 Identidade Visual e Interface
 
-O aplicativo foi projetado sob as diretrizes do Material Design em **Dark Mode**, garantindo conforto visual para o uso dentro do criatório, utilizando como base a cor **Amarelo Canário Canônico (`#FFD700`)** para destaques de status e alertas prioritários.
+O aplicativo foi projetado sob as diretrizes do Material Design in **Dark Mode**, garantindo conforto visual para o uso dentro do criatório, utilizando como base a cor **Amarelo Canário Canônico (`#FFD700`)** para destaques de status e alertas prioritários.
 
 ## 🛠️ Requisitos de Ambiente
 
