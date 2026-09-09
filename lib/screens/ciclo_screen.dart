@@ -9,7 +9,6 @@ class CicloScreen extends StatefulWidget {
 }
 
 class _CicloScreenState extends State<CicloScreen> {
-  // Mock Data: Histórico de ciclos ativos nas gaiolas do canaril
   final List<CicloReproducao> _ciclosAtivos = [
     CicloReproducao(
       idGaiola: 'Gaiola 04',
@@ -46,8 +45,6 @@ class _CicloScreenState extends State<CicloScreen> {
         itemCount: _ciclosAtivos.length,
         itemBuilder: (context, index) {
           final ciclo = _ciclosAtivos[index];
-          
-          // Calcula quantos dias de choco já se passaram
           final diasDeChoco = DateTime.now().difference(ciclo.dataInicioChoco).inDays;
 
           return Card(
@@ -57,28 +54,17 @@ class _CicloScreenState extends State<CicloScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cabeçalho da Gaiola
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        ciclo.idGaiola,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFFFD700)),
-                      ),
-                      Chip(
-                        label: Text('$diasDeChoco° Dia de Choco'),
-                        backgroundColor: Colors.amber.shade900.withOpacity(0.4),
-                      ),
+                      Text(ciclo.idGaiola, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+                      Chip(label: Text('$diasDeChoco° Dia de Choco'), backgroundColor: Colors.amber.shade900.withOpacity(0.4)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  
-                  // Informações do Casal
                   Text('🧬 Macho: ${ciclo.idMacho} | Fêmea: ${ciclo.idFemea}', style: const TextStyle(fontWeight: FontWeight.w500)),
                   Text('📌 Manejo do Macho: ${ciclo.tipoManejoMacho}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
                   const Divider(height: 24),
-
-                  // Contador de Ovos
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -88,70 +74,31 @@ class _CicloScreenState extends State<CicloScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Agenda Biológica Automatizada (Getters do Modelo)
                   const Text('📅 Cronograma e Gatilhos de Manejo:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
                   const SizedBox(height: 8),
-                  
-                  _buildLinhaCronograma(
-                    titulo: '🔬 Ovoscopia (7º dia):', 
-                    data: ciclo.dataOvoscopia, 
-                    concluido: diasDeChoco >= 7
-                  ),
-                  _buildLinhaCronograma(
-                    titulo: '🛁 Colocar Banheira (12º dia):', 
-                    data: ciclo.dataBanheira, 
-                    concluido: diasDeChoco >= 12
-                  ),
-                  _buildLinhaCronograma(
-                    titulo: '🐣 Previsão de Nascimento (13º dia):', 
-                    data: ciclo.dataNascimento, 
-                    concluido: diasDeChoco >= 13,
-                    destaque: true
-                  ),
-                  _buildLinhaCronograma(
-                    titulo: '💍 Anilhamento dos Filhotes (18º dia):', 
-                    data: ciclo.dataAnilhamento, 
-                    concluido: diasDeChoco >= 18
-                  ),
+                  _buildLinhaCronograma(titulo: '🔬 Ovoscopia (7º dia):', data: ciclo.dataOvoscopia, concluido: diasDeChoco >= 7),
+                  _buildLinhaCronograma(titulo: '🛁 Colocar Banheira (12º dia):', data: ciclo.dataBanheira, concluido: diasDeChoco >= 12),
+                  _buildLinhaCronograma(titulo: '🐣 Previsão de Nascimento (13º dia):', data: ciclo.dataNascimento, concluido: diasDeChoco >= 13, destaque: true),
+                  _buildLinhaCronograma(titulo: '💍 Anilhamento dos Filhotes (18º dia):', data: ciclo.dataAnilhamento, concluido: diasDeChoco >= 18),
                 ],
               ),
             ),
-          ];
+          );
         },
       ),
     );
   }
 
-  Widget _buildLinhaCronograma({
-    required String titulo, 
-    required DateTime data, 
-    required bool concluido, 
-    bool destaque = false
-  }) {
+  Widget _buildLinhaCronograma({required String titulo, required DateTime data, required bool concluido, bool destaque = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            titulo, 
-            style: TextStyle(
-              color: destaque ? const Color(0xFFFFD700) : (concluido ? Colors.grey : Colors.white),
-              fontWeight: destaque ? FontWeight.bold : FontWeight.normal
-            )
-          ),
-          Text(
-            _formatarData(data),
-            style: TextStyle(
-              color: concluido ? Colors.green : (destaque ? const Color(0xFFFFD700) : Colors.white),
-              decoration: concluido ? TextDecoration.lineThrough : null,
-              fontWeight: destaque ? FontWeight.bold : FontWeight.normal
-            ),
-          ),
+          Text(titulo, style: TextStyle(color: destaque ? const Color(0xFFFFD700) : (concluido ? Colors.grey : Colors.white), fontWeight: destaque ? FontWeight.bold : NavKey == null ? FontWeight.normal : FontWeight.normal)),
+          Text(_formatarData(data), style: TextStyle(color: concluido ? Colors.green : (destaque ? const Color(0xFFFFD700) : Colors.white), decoration: concluido ? TextDecoration.lineThrough : null, fontWeight: destaque ? FontWeight.bold : FontWeight.normal)),
         ],
       ),
     );
   }
-        }
-        
+}
