@@ -47,5 +47,4 @@ canary_control_pro/
 
 *   **Flutter SDK:** `>= 3.0.0`
 *   **Dart Language:** `>= 3.0.0 < 4.0.0`
-*   **Dependências Principais:** `sqflite` (Banco de dados), `path` (Diretórios do sistema), `cupertino_icons` (Icons).
-*   
+*   **Dependências Principais:** `sqflite` (Banco de dados), `path` (Diretórios do system), `cupertino_icons` (Icons).
