@@ -4,15 +4,11 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
-*   **📦 Compilação Automatizada de Binários (Nuvem APK):** Pipeline de Integração Contínua (CI/CD) operando sob o motor v4 de upload do GitHub Actions. O sistema executa testes ornitológicos em ambiente virtualizado isolado, reconstrói de forma dinâmica o ecossistema e os arquivos de compilação da plataforma (`android/`) e gera o instalador móvel nativo (**APK**) disponível através do painel de Artefatos.
+*   **📐 Gestão Harem / Bigamia / Poligamia:** Controle avançado de manejo reprodutivo por gaiolas físicas indexadas. Vincula de forma independente o histórico de postura e eclosão de cada fêmea acasalada com o mesmo reprodutor macho (Ex: Gaiola 15 - Fêmea OZ-012 acasalada em Bigamia com Macho GZ-035).
+*   **📊 Rankings de Fertilidade Duplos (Machos e Fêmeas):** Módulo de auditoria de plantel que calcula de forma isolada as taxas de eficiência reprodutiva por sexo, identificando de forma clara quais machos e quais fêmeas são as melhores matrizes do plantel.
+*   **✍️ Banco de Dados Clínico e de Mutação Customizável:** Interface com campos editáveis adicionais permitindo incluir observações fenotípicas, mutações raras personalizadas fora da tabela estática FOB e notas clínicas por exemplar.
 *   **🎨 Customização Dinâmica por Identidade Visual:** Cadastro completo do Perfil do Criador contendo nome, clube associado (opcional), cidade, estado e até 4 raças focais do criatório. O sistema lê o arquivo de logo do canaril anexado para extrair e reconfigurar as paletas de cores internas do aplicativo dinamicamente.
-*   **🌳 Rastreabilidade e Árvore Genealógica:** Banco de dados expandido com suporte a filiação direta (`idPaiAnilha` e `idMaeAnilha`). Implementação de algoritmos de busca recursiva capazes de compilar e exportar árvores genealógicas completas para emissão de certificados de linhagem.
-*   **🛒 Rastreamento Avançado de Origem de Plantel:** Registro minucioso sobre a procedência de novas matrizes inseridas no plantel, com campos para identificar se o pássaro é nascido no criatório, adquirido de terceiros (com especificação do clube e nome do canaril) ou comprado em pet shops/lojas comerciais.
-*   **📊 Central de Exportação de Dados:** Módulo analítico capaz de compilar dados complexos do banco de dados em arquivos formatados estruturados (padrão CSV). Permite extrair relatórios de auditoria ornitológica de matrizes ativas, taxas de fertilidade acumuladas e histórico financeiro de saídas.
 *   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
-*   **🧪 Suite de Testes Automatizados:** Cobertura de testes unitários (`flutter_test`) na raiz do projeto para validar algoritmos de cálculo de fertilidade, prevenções de erros matemáticos (divisão por zero) e precisão na geração dos cronogramas biológicos de choco de 13 dias.
-*   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
-*   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` de 5 posições acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todas as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado de carregamento das telas.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
 
@@ -29,16 +25,4 @@ canary_control_pro/
 │   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco com suporte toMap/fromMap
 │   │   ├── criador_model.dart    # Configurações do perfil do criador e lógica multiraças (Até 4 raças)
 │   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos com mapeamento SQLite
-│   ├── screens/             # Camada Visual (Interface Gráfica com o Criador)
-│   │   ├── baixa_screen.dart     # Gerenciamento de saídas, vendas e óbitos do plantel
-│   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
-│   │   ├── dashboard_screen.dart # Simulador genético e ranking de reprodutores
-│   │   ├── exportacao_screen.dart# Painel de compilação de relatórios e exportação CSV com árvores genealógicas
-│   │   ├── login_screen.dart     # Tela de login e autenticação com validação de chaves
-│   │   ├── navigation_screen.dart# Controlador central do menu inferior (Abas)
-│   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
-│   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
-├── test/                    # 🧪 Camada de Testes Automatizados e Validação de Algoritmos
-│   └── reproducao_test.dart      # Validação de taxas de fertilidade e cronograma do choco
-└── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
