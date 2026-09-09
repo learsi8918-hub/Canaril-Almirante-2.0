@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/saude_model.dart';
-import '../models/ave_model.dart';
 
 class SaudeScreen extends StatefulWidget {
   const SaudeScreen({Key? key}) : super(key: key);
@@ -10,7 +9,6 @@ class SaudeScreen extends StatefulWidget {
 }
 
 class _SaudeScreenState extends State<SaudeScreen> {
-  // Histórico clínico simulado conectado ao ID das aves do plantel
   final List<OcorrenciaSaude> _historicoClinico = [
     OcorrenciaSaude(
       id: '1',
@@ -30,7 +28,6 @@ class _SaudeScreenState extends State<SaudeScreen> {
     ),
   ];
 
-  // Controladores de texto para simular o cadastro de um novo caso médico
   final _formKey = GlobalKey<FormState>();
   String _aveSelecionada = 'SO-012';
   final _doencaController = TextEditingController();
@@ -53,7 +50,7 @@ class _SaudeScreenState extends State<SaudeScreen> {
         _doencaController.clear();
         _tratamentoController.clear();
       });
-      Navigator.pop(context); // Fecha a janela flutuante de cadastro
+      Navigator.pop(context);
     }
   }
 
@@ -69,20 +66,13 @@ class _SaudeScreenState extends State<SaudeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('🏥 Controle de Saúde e Doenças'),
-        backgroundColor: const Color(0xFF1E1E1E),
-      ),
+      appBar: AppBar(title: const Text('🏥 Controle de Saúde e Doenças'), backgroundColor: const Color(0xFF1E1E1E)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        onChanged: () {},
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "📋 Prontuários e Histórico Clínico",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+            const Text("📋 Prontuários e Histórico Clínico", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 10),
             Expanded(
               child: _historicoClinico.isEmpty
@@ -101,10 +91,7 @@ class _SaudeScreenState extends State<SaudeScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      'Canário: ${ocorrencia.identificadorAve}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFFFD700)),
-                                    ),
+                                    Text('Canário: ${ocorrencia.identificadorAve}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFFFD700))),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
@@ -112,10 +99,7 @@ class _SaudeScreenState extends State<SaudeScreen> {
                                         border: Border.all(color: _getStatusColor(ocorrencia.statusTratamento)),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(
-                                        ocorrencia.statusTratamento,
-                                        style: TextStyle(color: _getStatusColor(ocorrencia.statusTratamento), fontWeight: FontWeight.bold, fontSize: 12),
-                                      ),
+                                      child: Text(ocorrencia.statusTratamento, style: TextStyle(color: _getStatusColor(ocorrencia.statusTratamento), fontWeight: FontWeight.bold, fontSize: 12)),
                                     ),
                                   ],
                                 ),
@@ -124,10 +108,7 @@ class _SaudeScreenState extends State<SaudeScreen> {
                                 const SizedBox(height: 4),
                                 Text('💊 Conduta/Tratamento: ${ocorrencia.tratamentoAplicado}', style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
                                 const SizedBox(height: 6),
-                                Text(
-                                  '📅 Data: ${ocorrencia.dataDiagnostico.day}/${ocorrencia.dataDiagnostico.month}/${ocorrencia.dataDiagnostico.year}',
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                                ),
+                                Text('📅 Data: ${ocorrencia.dataDiagnostico.day}/${ocorrencia.dataDiagnostico.month}/${ocorrencia.dataDiagnostico.year}', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
                               ],
                             ),
                           ),
@@ -138,7 +119,6 @@ class _SaudeScreenState extends State<SaudeScreen> {
           ],
         ),
       ),
-      // Botão para abrir o formulário flutuante de registro médico
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFFFD700),
         child: const Icon(Icons.add_alert, color: Colors.black),
@@ -154,10 +134,7 @@ class _SaudeScreenState extends State<SaudeScreen> {
       backgroundColor: const Color(0xFF1E1E1E),
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16, right: 16, top: 16,
-          ),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -176,18 +153,9 @@ class _SaudeScreenState extends State<SaudeScreen> {
                   onChanged: (val) => setState(() => _aveSelecionada = val!),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _doencaController,
-                  decoration: const InputDecoration(labelText: 'Doença ou Sintomas Observados', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty ? 'Informe o diagnóstico' : null,
-                ),
+                TextFormField(controller: _doencaController, decoration: const InputDecoration(labelText: 'Doença ou Sintomas Observados', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o diagnóstico' : null),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _tratamentoController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'Medicamento / Dosagem / Conduta', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty ? 'Informe o tratamento' : null,
-                ),
+                TextFormField(controller: _tratamentoController, maxLines: 2, decoration: const InputDecoration(labelText: 'Medicamento / Dosagem / Conduta', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o tratamento' : null),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(labelText: 'Status do Tratamento', border: OutlineInputBorder()),
