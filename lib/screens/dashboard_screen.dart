@@ -10,11 +10,11 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Estado Dinâmico e 100% Editável do Perfil do Criador
+  // Perfil Inicial 100% Editável do Criador
   CriadorPerfil _perfil = CriadorPerfil(
     nome: "Canaril Almirante",
-    siglaClube: "SOGO", // Sigla oficial corrigida conforme solicitado
-    logoPath: "amarelo", // Define a cor do tema dinâmico ('amarelo', 'azul', 'verde', 'vermelho')
+    siglaClube: "SOGO",
+    logoPath: "amarelo",
     racasPrincipais: ["Arlequim Português", "Vermelho Mosaico"],
     cidade: "Mineiros",
     estado: "GO",
@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Color _corDestaqueLogo = const Color(0xFFFFD700);
 
-  // Controladores para o formulário de edição do criador
+  // Controladores do Formulário de Edição
   final _formKeyCriador = GlobalKey<FormState>();
   late TextEditingController _nomeController;
   late TextEditingController _clubeController;
@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late TextEditingController _estadoController;
   String _logoSelecionadaCor = 'amarelo';
 
-  // Plantel de Aves ativo configurado com o Ranking de Fertilidade Duplo (M e F)
+  // Plantel Geral de Aves Cadastradas
   final List<Ave> _plantelGlobal = [
     Ave(anilha: '035', clubeSigla: 'GZ', sexo: 'M', tipoFob: 'Canário de Porte', mutacaoRaca: 'Arlequim Português', porteDetalhe: 'Sem Topete', comTopete: false, fotoPath: '', numeroGaiola: '15', origemTipo: 'Nascido no Canaril')..totalOvos=20..ovosFerteis=19,
     Ave(anilha: '012', clubeSigla: 'OZ', sexo: 'F', tipoFob: 'Canário de Porte', mutacaoRaca: 'Arlequim Português', porteDetalhe: 'Com Topete', comTopete: true, fotoPath: '', numeroGaiola: '15', origemTipo: 'Adquirido de Outro Canaril', nomeCriadorOrigem: 'Canaril Silva', clubeCriadorOrigem: 'FOB')..totalOvos=15..ovosFerteis=14,
@@ -48,7 +48,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _atualizarCoresDoAplicativo(_logoSelecionadaCor);
   }
 
-  // Algoritmo de Extração de Cores: Adapta o visual do aplicativo baseado na logo inserida
   void _atualizarCoresDoAplicativo(String corLogo) {
     setState(() {
       switch (corLogo) {
@@ -57,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         case 'vermelho': _corDestaqueLogo = const Color(0xFFEF5350); break;
         case 'amarelo':
         default:
-          _corDestaqueLogo = const Color(0xFFFFD700); // Amarelo Canário Oficial
+          _corDestaqueLogo = const Color(0xFFFFD700);
       }
     });
   }
@@ -92,13 +91,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text("🎨 Simular Upload de Logo (Muda as Cores do App):", style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.bold)),
+                    const Text("🎨 Escolha a Logo do Canaril (Muda o Tema do App):", style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: _logoSelecionadaCor,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
                       items: const [
-                        DropdownMenuItem(value: 'amarelo', child: Text('Logo Amarela (Tema Tradicional)')),
+                        DropdownMenuItem(value: 'amarelo', child: Text('Logo Amarela (Tema Padrão)')),
                         DropdownMenuItem(value: 'azul', child: Text('Logo Azul (Tema Soft)')),
                         DropdownMenuItem(value: 'verde', child: Text('Logo Verde (Tema Ecológico)')),
                         DropdownMenuItem(value: 'vermelho', child: Text('Logo Vermelha (Tema Intenso)')),
@@ -143,9 +142,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Separação cirúrgica dos Rankings de Fertilidade por Sexo (Atributo solicitado)
+    // Computação Separada por Sexo para Geração de Rankings Distintos
     List<Ave> rankingMachos = _plantelGlobal.where((a) => a.sexo == 'M').toList()
       ..sort((a, b) => b.taxaFertilidade.compareTo(a.taxaFertilidade));
+    
     List<Ave> rankingFemeas = _plantelGlobal.where((a) => a.sexo == 'F').toList()
       ..sort((a, b) => b.taxaFertilidade.compareTo(a.taxaFertilidade));
 
@@ -162,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- CARTÃO DE APRESENTAÇÃO DO CRIADOR ---
+            // --- BLOCO 1: CADASTRO DO CRIADOR DINÂMICO ---
             Card(
               color: const Color(0xFF1A1A1A),
               shape: RoundedRectangleBorder(side: BorderSide(color: _corDestaqueLogo.withOpacity(0.6)), borderRadius: BorderRadius.circular(12)),
@@ -177,7 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(_perfil.nome, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text(_perfil.siglaClube.isNotEmpty ? '🏅 Clube: ${_perfil.siglaClube}' : '🏅 Sem filiação a clube', style: TextStyle(color: _corDestaqueLogo, fontSize: 13, fontWeight: FontWeight.bold)),
+                          Text(_perfil.siglaClube.isNotEmpty ? '🏅 Clube: ${_perfil.siglaClube}' : '🏅 Sem clube cadastrado', style: TextStyle(color: _corDestaqueLogo, fontSize: 13, fontWeight: FontWeight.bold)),
                           Text('📍 ${_perfil.cidade} - ${_perfil.estado}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                         ],
                       ),
@@ -188,7 +188,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 24),
 
-            // --- RANKING DE FERTILIDADE DE MACHOS ---
+            // --- BLOCO 2: RANKING DOS REPRODUTORES (MACHOS) ---
             Text("🚹 Melhores Reprodutores (Machos)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _corDestaqueLogo)),
             const SizedBox(height: 8),
-            
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rankingMachos.length,
+              itemBuilder: (context, index) {
+                final ave = rankingMachos[index];
+                return Card(
+                  child: ListTile(leading: const Icon(Icons.male, color: Colors.blue),title: Text(ave.identificadorOficial),subtitle: Text('Gaiola: ${ave.numeroGaiola} | Posturas monitoradas'),trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}% Fert.', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),),);},),const SizedBox(height: 24),// --- BLOCO 3: RANKING DAS MATRIZES (FÊMEAS) ---Text("🚺 Melhores Matrizes (Fêmeas)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _corDestaqueLogo)),const SizedBox(height: 8),ListView.builder(shrinkWrap: true,physics: const NeverScrollableScrollPhysics(),itemCount: rankingFemeas.length,itemBuilder: (context, index) {final ave = rankingFemeas[index];return Card(child: ListTile(leading: const Icon(Icons.female, color: Colors.pink),title: Text(ave.identificadorOficial),subtitle: Text('Gaiola: ${ave.numeroGaiola} | Ovos Postos: ${ave.totalOvos}'),trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}% Fert.', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),),);},),],),),);}}
+---
