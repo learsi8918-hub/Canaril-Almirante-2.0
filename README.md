@@ -13,6 +13,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
     *   *13º Dia:* Previsão exata do nascimento dos filhotes
     *   *18º Dia:* Período ideal para anilhamento oficial
 *   **🍂 Registro de Baixas do Plantel:** Módulo especializado para controle rigoroso do inventário e ciclo de vida das aves. Registra as saídas do criatório categorizadas por motivo comercial ou clínico (Venda com valor/comprador, Doação ou Óbito detalhado), permitindo futuras auditorias de mortalidade e faturamento.
+*   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todas as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado das telas.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
 
@@ -30,6 +31,7 @@ canary_control_pro/
 │   │   ├── baixa_screen.dart     # Gerenciamento de saídas, vendas e óbitos do plantel
 │   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
 │   │   ├── dashboard_screen.dart # Simulador genético e ranking de reprodutores
+│   │   ├── navigation_screen.dart# Controlador central do menu inferior (Abas)
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências e SDK do Flutter
