@@ -42,9 +42,3 @@ canary_control_pro/
 │   └── reproducao_test.dart      # Validação de taxas de fertilidade e cronograma do choco
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
-
-## 🛠️ Requisitos de Ambiente
-
-*   **Flutter SDK:** `>= 3.0.0`
-*   **Dart Language:** `>= 3.0.0 < 4.0.0`
-*   **Dependências Principais:** `sqflite` (Banco de dados), `path` (Diretórios do system), `cupertino_icons` (Icons).
