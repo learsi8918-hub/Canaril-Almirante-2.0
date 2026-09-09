@@ -1,28 +1,30 @@
-/// -----------------------------------------------------------------------
-/// MODELO DE DADOS DA AVE E CONFIGURAÇÃO FOB (ANTI-TRAVAMENTO)
-/// -----------------------------------------------------------------------
-
 class Ave {
-  final String anilha;         // Número da anilha
-  final String clubeSigla;     // Sigla do clube (Ex: FOB, SO)
-  final String sexo;           // 'M' (Macho) ou 'F' (Fêmea)
-  final String tipoFob;        // 'Canário de Cor' ou 'Canário de Porte'
-  final String mutacaoRaca;    // Ex: Vermelho Mosaico, Arlequim Português
-  final String porteDetalhe;   // 'Com Topete' ou 'Sem Topete'
-  final bool comTopete;        // Trava para evitar fator letal homozigótico
+  final String anilha;         
+  final String clubeSigla;     
+  final String sexo;           
+  final String tipoFob;        
+  final String mutacaoRaca;    
+  final String porteDetalhe;   
+  final bool comTopete;        
   final String fotoPath;
   
-  // Regras de mutações avançadas e fatores genéticos
   final bool ehPortador;       
   final String? mutacaoPortada;
-  final String fatorMorfologico; // 'Fator Puro' ou 'Meio Fator'
+  final String fatorMorfologico; 
 
-  // Controle de Ciclo de Vida (Baixas do Plantel)
-  String status;               // 'Ativa', 'Vendida', 'Doada', 'Morta'
+  // Novas Regras de Controle de Plantel Avançado e Origem
+  final String origemTipo;         // 'Nascido no Canaril', 'Adquirido de Outro Canaril', 'Pet Shop / Loja'
+  final String? canarilProcedencia;// Nome do criatório de onde veio
+  final String? clubeOrigem;       // Clube associado da ave comprada
+
+  // Mapeamento de Filiação (Árvore Genealógica)
+  final String? idPaiAnilha;       
+  final String? idMaeAnilha;       
+
+  String status;               
   DateTime? dataBaixa;         
   String? motivoBaixaDetalhe;  
 
-  // Estatísticas Acumuladas para o Ranking de Produtividade
   int totalOvos = 0;
   int ovosFerteis = 0;
   int filhotesNascidos = 0;
@@ -36,6 +38,11 @@ class Ave {
     required this.porteDetalhe,
     required this.comTopete,
     required this.fotoPath,
+    required this.origemTipo,
+    this.canarilProcedencia,
+    this.clubeOrigem,
+    this.idPaiAnilha,
+    this.idMaeAnilha,
     this.ehPortador = false,
     this.mutacaoPortada,
     this.fatorMorfologico = 'Fator Puro',
@@ -44,18 +51,11 @@ class Ave {
     this.motivoBaixaDetalhe,
   });
 
-  // Identificador único ornitológico legível (Ex: "SO-012")
   String get identificadorOficial => '$clubeSigla-$anilha';
 
-  // Getters Inteligentes para os Rankings do Painel Analytics
   double get taxaFertilidade => totalOvos > 0 ? (ovosFerteis / totalOvos) * 100 : 0.0;
   double get taxaEclosao => ovosFerteis > 0 ? (filhotesNascidos / ovosFerteis) * 100 : 0.0;
 
-  /// -----------------------------------------------------------------------
-  /// MAPEAMENTO SERIALIZADOR PARA PERSISTÊNCIA NO SQLITE
-  /// -----------------------------------------------------------------------
-
-  // Converte o objeto Ave em um Mapa (JSON/Dicionário) para salvar no SQLite
   Map<String, dynamic> toMap() {
     return {
       'anilha': anilha,
@@ -64,21 +64,25 @@ class Ave {
       'tipoFob': tipoFob,
       'mutacaoRaca': mutacaoRaca,
       'porteDetalhe': porteDetalhe,
-      'comTopete': comTopete ? 1 : 0, // SQLite não guarda booleano, usamos 1 ou 0
+      'comTopete': comTopete ? 1 : 0, 
       'fotoPath': fotoPath,
       'ehPortador': ehPortador ? 1 : 0,
       'mutacaoPortada': mutacaoPortada,
       'fatorMorfologico': fatorMorfologico,
       'status': status,
-      'dataBaixa': dataBaixa?.toIso8601String(), // Datas viram texto ISO
+      'dataBaixa': dataBaixa?.toIso8601String(), 
       'motivoBaixaDetalhe': motivoBaixaDetalhe,
       'totalOvos': totalOvos,
       'ovosFerteis': ovosFerteis,
       'filhotesNascidos': filhotesNascidos,
+      'origemTipo': origemTipo,
+      'canarilProcedencia': canarilProcedencia,
+      'clubeOrigem': clubeOrigem,
+      'idPaiAnilha': idPaiAnilha,
+      'idMaeAnilha': idMaeAnilha,
     };
   }
 
-  // Reconstrói o objeto Ave a partir dos dados em formato de Mapa vindos do SQLite
   factory Ave.fromMap(Map<String, dynamic> map) {
     return Ave(
       anilha: map['anilha'],
@@ -95,6 +99,11 @@ class Ave {
       status: map['status'] ?? 'Ativa',
       dataBaixa: map['dataBaixa'] != null ? DateTime.parse(map['dataBaixa']) : null,
       motivoBaixaDetalhe: map['motivoBaixaDetalhe'],
+      origemTipo: map['origemTipo'] ?? 'Nascido no Canaril',
+      canarilProcedencia: map['canarilProcedencia'],
+      clubeOrigem: map['clubeOrigem'],
+      idPaiAnilha: map['idPaiAnilha'],
+      idMaeAnilha: map['idMaeAnilha'],
     )
       ..totalOvos = map['totalOvos'] ?? 0
       ..ovosFerteis = map['ovosFerteis'] ?? 0
@@ -102,19 +111,12 @@ class Ave {
   }
 }
 
-/// -----------------------------------------------------------------------
-/// BANCO DE DADOS FIXO DE PADRÕES DA FEDERAÇÃO (FOB)
-/// -----------------------------------------------------------------------
 class BancoDadosFOB {
   static const List<String> categorias = ['Canário de Cor', 'Canário de Porte'];
   static const List<String> mutacoesCor = [
-    'Branco Dominante', 'Branco Recessivo', 'Amarelo Intenso', 'Amarelo Nevado', 
-    'Amarelo Mosaico', 'Vermelho Intenso', 'Vermelho Nevado', 'Vermelho Mosaico', 
-    'Verde (Negro Amarelo)', 'Azul (Negro Branco)', 'Cobre (Negro Vermelho)', 
-    'Ágata Amarelo', 'Ágata Prata', 'Ágata Vermelho Mosaico', 'Isabel', 'Canela'
+    'Branco Dominante', 'Branco Recessivo', 'Amarelo Mosaico', 'Vermelho Mosaico', 'Ágata Amarelo', 'Cobre'
   ];
   static const List<String> racasPorte = [
-    'Arlequim Português', 'Gloster Corona', 'Gloster Consort', 'Raza Española', 
-    'Fife Fancy', 'Lizard Oro', 'Lizard Plata', 'Border', 'Fiorino'
+    'Arlequim Português', 'Gloster Corona', 'Gloster Consort', 'Raza Española', 'Fife Fancy'
   ];
 }
