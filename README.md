@@ -5,6 +5,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 ## 🚀 Funcionalidades Implementadas
 
 *   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
+*   **🧪 Suite de Testes Automatizados:** Cobertura de testes unitários (`flutter_test`) na raiz do projeto para validar algoritmos de cálculo de fertilidade, prevenções de erros matemáticos (divisão por zero) e precisão na geração dos cronogramas biológicos de choco de 13 dias.
 *   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
 *   **📊 Ranking de Fertilidade Dinâmico:** Dashboard analítico que calcula de forma automática a taxa de fertilidade com base nos getters reais de `Ovos Galados` / `Ovos Totais`, gerando uma classificação instantânea dos melhores reprodutores e matrizes do plantel.
 *   **🏥 Prontuário Clínico Digital:** Módulo avançado para monitoramento de sintomas e doenças comuns (como Peito Seco/Coccidiose e Ácaro de Traqueia), histórico de tratamentos ministrados com controle rigoroso de dosagens e status clínico (Em Tratamento, Curado ou Óbito).
@@ -37,6 +38,8 @@ canary_control_pro/
 │   │   ├── navigation_screen.dart# Controlador central do menu inferior (Abas)
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
+├── test/                    # 🧪 Camada de Testes Automatizados e Validação de Algoritmos
+│   └── reproducao_test.dart      # Validação de taxas de fertilidade e cronograma do choco
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
 
