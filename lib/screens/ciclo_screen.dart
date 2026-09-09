@@ -95,7 +95,7 @@ class _CicloScreenState extends State<CicloScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(titulo, style: TextStyle(color: destaque ? const Color(0xFFFFD700) : (concluido ? Colors.grey : Colors.white), fontWeight: destaque ? FontWeight.bold : NavKey == null ? FontWeight.normal : FontWeight.normal)),
+          Text(titulo, style: TextStyle(color: destaque ? const Color(0xFFFFD700) : (concluido ? Colors.grey : Colors.white), fontWeight: destaque ? FontWeight.bold : FontWeight.normal)),
           Text(_formatarData(data), style: TextStyle(color: concluido ? Colors.green : (destaque ? const Color(0xFFFFD700) : Colors.white), decoration: concluido ? TextDecoration.lineThrough : null, fontWeight: destaque ? FontWeight.bold : FontWeight.normal)),
         ],
       ),
