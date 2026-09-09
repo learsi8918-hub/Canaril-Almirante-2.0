@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/ciclo_screen.dart'; // Importando a tela de ciclos
+import 'screens/baixa_screen.dart'; // Importando a nova tela de baixas
 
 void main() {
   runApp(const CanaryControlApp());
@@ -17,7 +17,7 @@ class CanaryControlApp extends StatelessWidget {
         brightness: Brightness.dark,
         primaryColor: const Color(0xFFFFD700),
       ),
-      home: const CicloScreen(), // Iniciando na tela de reprodução e choco
+      home: const BaixaScreen(), // Iniciando na tela de baixas
     );
   }
 }
