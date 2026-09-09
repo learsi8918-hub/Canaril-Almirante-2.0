@@ -63,7 +63,10 @@ class _SaudeScreenState extends State<SaudeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('🏥 Controle de Saúde e Doenças'), backgroundColor: const Color(0xFF1E1E1E)),
+      appBar: AppBar(
+        title: const Text('🏥 Controle de Saúde e Doenças'), 
+        backgroundColor: const Color(0xFF1E1E1E),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
