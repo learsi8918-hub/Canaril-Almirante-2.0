@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canaril Almirante - Sistema de Gestão</title>
+    <style>
+        :root { --primary: #1e3a8a; --success: #16a34a; --warning: #ca8a04; --danger: #dc2626; --bg: #f8fafc; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #1e293b; }
+        .header { background: var(--primary); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { margin: 5px 0 0 0; opacity: 0.9; font-size: 14px; font-weight: bold; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; color: var(--primary); }
+        .badge { display: inline-block; padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 6px; color: white; }
+        .bg-success { background: var(--success); } .bg-warning { background: var(--warning); }
+        .grid-bigamia { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .sub-ninho { background: #f1f5f9; padding: 10px; border-radius: 8px; border-left: 4px solid var(--primary); }
+        .alert-box { background: #fef2f2; border: 1px solid #fca5a5; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; display: none; margin-top: 10px; }
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; margin-top: 5px; cursor: pointer; }
+        .btn-timer { background: #0284c7; }
+    </style>
+</head>
+<body>
+
+    <!-- CABEÇALHO OFICIAL DO SEU CANARIL -->
+    <div class="header">
+        <h1>🦅 Canaril Almirante</h1>
+        <p>Filiado à SO (SOGO) | Mineiros - GO</p>
+    </div>
+
+    <!-- MONITORAMENTO EM TEMPO REAL DO CHOCO DE HOJE -->
+    <div class="card">
+        <h2>🪺 Gaiola 12 - Controle de Bigamia</h2>
+        <div class="grid-bigamia">
+            <div class="sub-ninho">
+                <strong>♀️ Fêmea 08</strong><br>
+                <span class="badge bg-warning">Ovos: 1 (Postura)</span>
+            </div>
+            <div class="sub-ninho">
+                <strong>♀️ Fêmea 15</strong><br>
+                <span class="badge bg-success">Ovos: 4 (Choco)</span>
+            </div>
+        </div>
+        
+        <!-- Cronograma Inteligente Calculado para 09/Set/2026 -->
+        <p style="font-size: 13px; margin-top: 12px; background: #eff6ff; padding: 8px; border-radius: 6px; line-height: 1.4;">
+            📅 <strong>Início do Choco:</strong> 09/Set/2026<br>
+            🔬 <strong>Ovoscopia (7º dia):</strong> 16/Set/2026<br>
+            💧 **Banheira (12º dia):** 21/Set/2026<br>
+            🐣 <strong>Nascimento Provável:</strong> 22/Set/2026
+        </p>
+    </div>
+
+    <!-- GERENCIADOR DE RODÍZIO POR HORÁRIO (05h às 09h) -->
+    <div class="card">
+        <h2>⏰ Manejo de Poligamia - Macho 05</h2>
+        <p style="font-size: 13px; margin: 0 0 10px 0;">Ative a janela de cópula diária para monitorar a retirada automatizada às 09:00.</p>
+        <button class="btn btn-timer" onclick="iniciarJanela()">⚡ Iniciar Janela de Cópula (05h às 09h)</button>
+        <div id="alertAcoplamento" class="alert-box">⚠️ Janela encerrada! Retire o Macho 05 imediatamente para descanso.</div>
+    </div>
+
+    <script>
+        function iniciarJanela() {
+            alert("Janela de Cópula iniciada com sucesso! O sistema monitorará o horário biológico.");
+            // Simulação de gatilho de horário para demonstração local
+            setTimeout(() => {
+                document.getElementById('alertAcoplamento').style.display = 'block';
+            }, 3000); // Exibe o aviso em 3 segundos para teste
+        }
+    </script>
+</body>
+</html>
