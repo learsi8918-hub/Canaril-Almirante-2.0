@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'ciclo_screen.dart';
 import 'saude_screen.dart';
-import 'baixa_screen.dart';
-import 'exportacao_screen.dart'; // Importando a nova tela de relatórios
+import 'plantel_cadastro_screen.dart'; // Abre a nova tela de cadastro de matrizes
+import 'exportacao_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({Key? key}) : super(key: key);
@@ -15,12 +15,12 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   int _indiceAtual = 0;
 
-  // Lista expandida com as 5 tabelas/telas do ecossistema do Canaril
+  // Lista de telas que aparecem ao clicar nos botões de baixo do celular
   final List<Widget> _telas = [
     const DashboardScreen(),
     const CicloScreen(),
     const SaudeScreen(),
-    const BaixaScreen(),
+    const PlantelCadastroScreen(), // Adicionado o cadastro do plantel aqui
     const ExportacaoScreen(),
   ];
 
@@ -29,7 +29,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _indiceAtual,
-        children: _telas, // Preserva o preenchimento dos formulários ao alternar de aba
+        children: _telas,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _indiceAtual,
@@ -38,9 +38,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
             _indiceAtual = index;
           });
         },
-        type: BottomNavigationBarType.fixed, // Permite mais de 3 abas sem esconder os textos
+        type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF1E1E1E),
-        selectedItemColor: const Color(0xFFFFD700), // Amarelo Canário Canônico
+        selectedItemColor: const Color(0xFFFFD700),
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
@@ -61,9 +61,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
             label: 'Saúde',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.gavel_outlined),
-            activeIcon: Icon(Icons.gavel),
-            label: 'Baixas',
+            icon: Icon(Icons.add_box_outlined), // Ícone de caixinha para o Plantel
+            activeIcon: Icon(Icons.add_box),
+            label: 'Plantel',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics_outlined),
