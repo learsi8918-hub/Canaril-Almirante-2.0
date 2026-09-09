@@ -6,7 +6,7 @@ void main() {
   group('🧪 Testes de Regras Ornitológicas - CanaryControl Pro', () {
     
     test('📋 Deve calcular a taxa de fertilidade corretamente baseado nos ovos galados', () {
-      // Cria uma ave de teste usando o construtor nativo
+      // CORREÇÃO: Adicionado o parâmetro obrigatório origemTipo exigido pelo modelo atualizado
       final ave = Ave(
         anilha: '123',
         clubeSigla: 'FOB',
@@ -16,18 +16,17 @@ void main() {
         porteDetalhe: 'Sem Topete',
         comTopete: false,
         fotoPath: '',
+        origemTipo: 'Nascido no Canaril', // Campo corrigido
       );
 
-      // Simula os dados de postura acumulados
       ave.totalOvos = 10;
       ave.ovosFerteis = 8;
 
-      // Executa a função getter do modelo que criamos
       expect(ave.taxaFertilidade, equals(80.0));
     });
 
     test('⚠️ Deve disparar o gatilho biológico correto de 13 dias para o nascimento', () {
-      final dataChoco = DateTime(2026, 10, 1); // 1 de Outubro de 2026
+      final dataChoco = DateTime(2026, 10, 1);
       
       final ciclo = CicloReproducao(
         idGaiola: 'Gaiola 01',
@@ -37,13 +36,13 @@ void main() {
         tipoManejoMacho: 'Sempre Junto',
       );
 
-      // A previsão de nascimento obrigatoriamente precisa ser 13 dias após o choco
       final dataNascimentoEsperada = DateTime(2026, 10, 14);
       
       expect(ciclo.dataNascimento, equals(dataNascimentoEsperada));
     });
 
     test('🔬 Deve retornar taxa zero se a ave nunca tiver botado ovos (Prevenção de divisão por zero)', () {
+      // CORREÇÃO: Adicionado o parâmetro obrigatório origemTipo exigido pelo modelo atualizado
       final aveNova = Ave(
         anilha: '999',
         clubeSigla: 'SO',
@@ -53,9 +52,9 @@ void main() {
         porteDetalhe: 'Sem Topete',
         comTopete: false,
         fotoPath: '',
+        origemTipo: 'Nascido no Canaril', // Campo corrigido
       );
 
-      // Ovos totais = 0. Não pode travar o aplicativo!
       expect(aveNova.taxaFertilidade, equals(0.0));
     });
   });
