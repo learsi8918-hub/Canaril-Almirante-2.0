@@ -1,31 +1,46 @@
 # 🦅 CanaryControl Pro
 
-O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Flutter para a gestão avançada, controle sanitário, controle reprodutivo e mapeamento genético de canarís, totalmente alinhado aos padrões da **FOB (Federação Ornitológica Brasileira)**.
+O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Flutter para a gestão avançada, controle sanitário, monitoramento reprodutivo e mapeamento genético de canarís, totalmente alinhado às diretrizes técnicas e nomenclaturas da **FOB (Federação Ornitológica Brasileira)**.
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades Implementadas
 
-*   **🧬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo inteligente que analisa o genótipo do casal selecionado. Bloqueia e emite alertas vermelhos caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de morte embrionária).
-*   **📊 Ranking de Fertilidade Dinâmico:** Dashboard que calcula automaticamente a taxa de fertilidade com base nos getters reais de Ovos Galados / Ovos Totais, destacando os melhores reprodutores do plantel.
-*   **🏥 Prontuário Clínico Digital:** Aba especializada para monitorar sintomas (ex: Peito Seco, Ácaro de Traqueia), histórico de tratamentos com dosagens e controle de quarentena.
-*   **🥚 Calculadora Biológica de Choco:** Automação de datas críticas a partir do início do choco para evitar o abandono do ninho (Gera alertas exatos para Ovoscopia no 7º dia, Banheira no 12º dia e Nascimento no 13º dia).
-*   **🍂 Gerenciamento de Baixas:** Controle rigoroso de saída de aves por venda, doação ou óbito, gerando estatísticas de mortalidade do canaril.
+*   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
+*   **📊 Ranking de Fertilidade Dinâmico:** Dashboard analítico que calcula de forma automática a taxa de fertilidade com base nos getters reais de `Ovos Galados` / `Ovos Totais`, gerando uma classificação instantânea dos melhores reprodutores e matrizes do plantel.
+*   **🏥 Prontuário Clínico Digital:** Módulo avançado para monitoramento de sintomas e doenças comuns (como Peito Seco/Coccidiose e Ácaro de Traqueia), histórico de tratamentos ministrados com controle rigoroso de dosagens e status clínico (Em Tratamento, Curado ou Óbito).
+*   **🥚 Calculadora Biológica de Choco:** Agenda automatizada de manejo ativada a partir da data de início do choco para dar previsibilidade ao criador e evitar o abandono do ninho. Gera gatilhos cronológicos exatos para:
+    *   *7º Dia:* Ovoscopia (Identificação de ovos galados)
+    *   *12º Dia:* Colocação da banheira (Aumento da umidade para quebrar a casca)
+    *   *13º Dia:* Previsão exata do nascimento dos filhotes
+    *   *18º Dia:* Período ideal para anilhamento oficial
+*   **🍂 Registro de Baixas:** Estrutura nativa preparada para controlar a saída do plantel identificando os motivos comerciais ou de manejo (Venda, Doação ou Óbito).
 
-## 🗄️ Arquitetura do Repositório (Padrão Clean)
+## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
+
+A estrutura de arquivos do projeto está organizada de forma a isolar as responsabilidades e garantir que o aplicativo funcione de maneira rápida, sem travamentos na listagem de dados:
 
 ```text
-lib/
-├── models/          # Camada de Dados e Regras de Negócio Nativas
-│   ├── ave_model.dart          # Cadastro de aves, mutações FOB e portadores
-│   ├── ciclo_model.dart        # Gatilhos biológicos e datas do choco
-│   └── saude_model.dart        # Ficha médica e histórico clínico
-├── screens/         # Camada Visual (Interface com o Criador)
-│   ├── dashboard_screen.dart   # Simulador genético e rankings
-│   └── saude_screen.dart       # Lançamento de prontuários médicos
-└── main.dart        # Inicialização do app e gerenciamento do tema escuro
+canary_control_pro/
+├── assets/                  # Armazenamento de mídias e fotos do plantel (.gitkeep)
+├── lib/
+│   ├── models/              # Camada de Dados, Getters e Regras de Negócio Nativas
+│   │   ├── ave_model.dart        # Cadastro de aves, mutações FOB, portadores e controle de baixas
+│   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco
+│   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos
+│   ├── screens/             # Camada Visual (Interface Gráfica com o Criador)
+│   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
+│   │   ├── dashboard_screen.dart # Simulador genético e ranking de reprodutores
+│   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
+│   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
+└── pubspec.yaml             # Arquivo de configuração de pacotes, dependências e SDK do Flutter
 ```
 
-## 🛠️ Tecnologias Utilizadas
+## 🎨 Identidade Visual e Interface
 
-*   [Flutter SDK](https://flutter.dev) >= 3.0.0
-*   [Dart Language](https://dart.dev)
-*   Estilização Customizada em Dark Mode (Amarelo Canário Canônico `#FFD700`)
+O aplicativo foi projetado sob as diretrizes do Material Design em **Dark Mode**, garantindo conforto visual para o uso dentro do criatório, utilizando como base a cor **Amarelo Canário Canônico (`#FFD700`)** para destaques de status e alertas prioritários.
+
+## 🛠️ Requisitos de Ambiente
+
+*   **Flutter SDK:** `>= 3.0.0`
+*   **Dart Language:** `>= 3.0.0 < 4.0.0`
+*   **Dependências:** `cupertino_icons` para elementos visuais nativos e regras de análise lint ativas (`flutter_lints`).
+*   
