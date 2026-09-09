@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import 'main_ui.dart';
+import 'screens/saude_screen.dart'; // Importando a nova tela de saúde
 
 void main() {
-  // Chave de ignição que inicializa o aplicativo profissional do Canaril Almirante
-  runApp(CanarilAlmiranteApp());
+  runApp(const CanaryControlApp());
 }
 
-class CanarilAlmiranteApp extends StatelessWidget {
+class CanaryControlApp extends StatelessWidget {
+  const CanaryControlApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Canaril Almirante',
+      title: 'CanaryControl Pro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(0xFF1E3A8A), // Azul Náutico oficial
-        useMaterial3: true,
+        brightness: Brightness.dark,
+        primaryColor: const Color(0xFFFFD700),
       ),
-      home: AplicativoHome(), // Abre direto na tela com as abas que desenhamos
+      home: const SaudeScreen(), // Iniciando direto no controle clínico
     );
   }
 }
