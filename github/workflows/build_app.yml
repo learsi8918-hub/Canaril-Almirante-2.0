@@ -2,19 +2,19 @@ name: 🚀 Compilar CanaryControl Pro (Instalação e Testes)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*' # Dispara a compilação de APK sempre que você criar uma tag de versão (Ex: v1.0.0)
+  workflow_dispatch: # Adiciona um botão manual "Run workflow" na aba Actions para você forçar o APK quando quiser
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4 # Atualizado para v4
+    - uses: actions/checkout@v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4 # Atualizado para v4
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -33,11 +33,20 @@ jobs:
     - name: Compilar APK de Testes
       run: flutter build apk --debug
 
-    # Sistema de Upload v4 corrigido com busca dinâmica por arquivos .apk
-    - name: Disponibilizar Instalador (.APK)
-      uses: actions/upload-artifact@v4 
+    # Força a criação de uma página de download oficial (Release) no seu GitHub
+    - name: Criar Link de Download Oficial (Release APK)
+      uses: softprops/action-gh-release@v2
       with:
-        name: canary-control-pro-teste
-        path: build/app/outputs/flutter-apk/app-debug.apk
-        if-no-files-found: error # Faz a automação falhar explicitamente caso não ache o arquivo
+        files: build/app/outputs/flutter-apk/app-debug.apk
+        tag_name: v1.0.${{ github.run_number }}
+        name: CanaryControl Pro - Versão de Testes v1.0.${{ github.run_number }}
+        body: |
+          🚀 O seu instalador APK do Canaril foi gerado com sucesso!
+          
+          📦 **Como instalar:**
+          1. Baixe o arquivo `app-debug.apk` anexado abaixo.
+          2. Transfira para o seu celular Android.
+          3. Abra o arquivo e autorize a instalação.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
