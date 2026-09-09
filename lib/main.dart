@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/saude_screen.dart'; // Importando a nova tela de saúde
+import 'screens/ciclo_screen.dart'; // Importando a tela de ciclos
 
 void main() {
   runApp(const CanaryControlApp());
@@ -17,7 +17,7 @@ class CanaryControlApp extends StatelessWidget {
         brightness: Brightness.dark,
         primaryColor: const Color(0xFFFFD700),
       ),
-      home: const SaudeScreen(), // Iniciando direto no controle clínico
+      home: const CicloScreen(), // Iniciando na tela de reprodução e choco
     );
   }
 }
