@@ -9,7 +9,6 @@ class BaixaScreen extends StatefulWidget {
 }
 
 class _BaixaScreenState extends State<BaixaScreen> {
-  // Lista simulada de aves que saíram do plantel (Histórico de Baixas)
   final List<Ave> _historicoBaixas = [
     Ave(
       anilha: '003',
@@ -20,6 +19,7 @@ class _BaixaScreenState extends State<BaixaScreen> {
       porteDetalhe: 'Sem Topete',
       comTopete: false,
       fotoPath: '',
+      origemTipo: 'Adquirido de Outro Canaril',
       status: 'Vendida',
       dataBaixa: DateTime.now().subtract(const Duration(days: 30)),
       motivoBaixaDetalhe: 'Vendido para o Canaril Oliveira - Valor: R\$ 150,00',
@@ -33,15 +33,14 @@ class _BaixaScreenState extends State<BaixaScreen> {
       porteDetalhe: 'Com Topete',
       comTopete: true,
       fotoPath: '',
+      origemTipo: 'Nascido no Canaril',
       status: 'Morta',
       dataBaixa: DateTime.now().subtract(const Duration(days: 5)),
       motivoBaixaDetalhe: 'Óbito por retenção de ovo (Ovo atravessado).',
     ),
   ];
 
-  // Aves ativas fictícias prontas para receber baixa se necessário
   final List<String> _avesAtivasParaBaixa = ['SO-012', 'FOB-014', 'SO-005'];
-
   final _formKey = GlobalKey<FormState>();
   String _aveSelecionada = 'SO-012';
   String _tipoBaixaSelecionado = 'Vendida';
@@ -50,17 +49,17 @@ class _BaixaScreenState extends State<BaixaScreen> {
   void _confirmarBaixaPlantel() {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        // Na lógica real, isso alteraria o status da ave na lista global
         _historicoBaixas.add(
           Ave(
-            anilha: _aveSelecionada.split('-')[1],
-            clubeSigla: _aveSelecionada.split('-')[0],
-            sexo: 'U', // Indefinido na simulação rápida
+            anilha: _aveSelecionada,
+            clubeSigla: 'SO',
+            sexo: 'U',
             tipoFob: 'Canário de Cor',
             mutacaoRaca: 'Atualizado',
             porteDetalhe: 'Sem Topete',
             comTopete: false,
             fotoPath: '',
+            origemTipo: 'Nascido no Canaril',
             status: _tipoBaixaSelecionado,
             dataBaixa: DateTime.now(),
             motivoBaixaDetalhe: _motivoController.text,
@@ -68,35 +67,26 @@ class _BaixaScreenState extends State<BaixaScreen> {
         );
         _motivoController.clear();
       });
-      Navigator.pop(context); // Fecha o modal
+      Navigator.pop(context);
     }
   }
 
   Color _getBaixaColor(String status) {
-    switch (status) {
-      case 'Vendida': return Colors.blue;
-      case 'Doada': return Colors.teal;
-      case 'Morta': return Colors.red;
-      default: return Colors.grey;
-    }
+    if (status == 'Vendida') return Colors.blue;
+    if (status == 'Doada') return Colors.teal;
+    return Colors.red;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('🍂 Baixa de Plantel'),
-        backgroundColor: const Color(0xFF1E1E1E),
-      ),
+      appBar: AppBar(title: const Text('🍂 Baixa de Plantel'), backgroundColor: const Color(0xFF1E1E1E)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "📜 Histórico de Saídas e Baixas",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+            const Text("📜 Histórico de Saídas e Baixas", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 10),
             Expanded(
               child: _historicoBaixas.isEmpty
@@ -105,28 +95,17 @@ class _BaixaScreenState extends State<BaixaScreen> {
                       itemCount: _historicoBaixas.length,
                       itemBuilder: (context, index) {
                         final aveBaixada = _historicoBaixas[index];
-                        final dataStr = aveBaixada.dataBaixa != null
-                            ? '${aveBaixada.dataBaixa!.day}/${aveBaixada.dataBaixa!.month}/${aveBaixada.dataBaixa!.year}'
-                            : '---';
-
+                        final dataStr = aveBaixada.dataBaixa != null ? '${aveBaixada.dataBaixa!.day}/${aveBaixada.dataBaixa!.month}/${aveBaixada.dataBaixa!.year}' : '---';
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           child: ListTile(
                             leading: Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: _getBaixaColor(aveBaixada.status).withOpacity(0.2),
-                                border: Border.all(color: _getBaixaColor(aveBaixada.status)),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                aveBaixada.status.toUpperCase(),
-                                style: TextStyle(color: _getBaixaColor(aveBaixada.status), fontWeight: FontWeight.bold, fontSize: 10),
-                              ),
+                              decoration: BoxDecoration(color: _getBaixaColor(aveBaixada.status).withOpacity(0.2), border: Border.all(color: _getBaixaColor(aveBaixada.status)), borderRadius: BorderRadius.circular(8)),
+                              child: Text(aveBaixada.status.toUpperCase(), style: TextStyle(color: _getBaixaColor(aveBaixada.status), fontWeight: FontWeight.bold, fontSize: 10)),
                             ),
                             title: Text('${aveBaixada.identificadorOficial} - ${aveBaixada.mutacaoRaca}'),
                             subtitle: Text('Motivo: ${aveBaixada.motivoBaixaDetalhe ?? "Não especificado"}\nData: $dataStr'),
-                            isThreeLine: true,
                           ),
                         );
                       },
@@ -150,10 +129,7 @@ class _BaixaScreenState extends State<BaixaScreen> {
       backgroundColor: const Color(0xFF1E1E1E),
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16, right: 16, top: 16,
-          ),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -180,12 +156,7 @@ class _BaixaScreenState extends State<BaixaScreen> {
                   onChanged: (val) => setState(() => _tipoBaixaSelecionado = val!),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _motivoController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'Detalhes (Preço de venda, comprador ou causa da morte)', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty ? 'Por favor, insira uma justificativa/detalhe' : null,
-                ),
+                TextFormField(controller: _motivoController, decoration: const InputDecoration(labelText: 'Detalhes (Preço, comprador ou óbito)', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Por favor, insira uma justificativa' : null),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
