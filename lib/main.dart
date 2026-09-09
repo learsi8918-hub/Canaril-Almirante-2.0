@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/baixa_screen.dart'; // Importando a nova tela de baixas
+import 'screens/navigation_screen.dart'; // Importando o menu de abas principal
 
 void main() {
   runApp(const CanaryControlApp());
@@ -15,9 +15,14 @@ class CanaryControlApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        primaryColor: const Color(0xFFFFD700),
+        primaryColor: const Color(0xFFFFD700), // Amarelo Canário
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        cardTheme: const CardTheme(
+          color: Color(0xFF1E1E1E),
+          elevation: 2,
+        ),
       ),
-      home: const BaixaScreen(), // Iniciando na tela de baixas
+      home: const NavigationScreen(), // Inicializando no controlador de abas unificado
     );
   }
 }
