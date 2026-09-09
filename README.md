@@ -1,9 +1,12 @@
 # 🦅 CanaryControl Pro
 
+![Compilação do Aplicativo](https://github.com)
+
 O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Flutter para a gestão avançada, controle sanitário, monitoramento reprodutivo e mapeamento genético de canarís, totalmente alinhado às diretrizes técnicas e nomenclaturas da **FOB (Federação Ornitológica Brasileira)**.
 
 ## 🚀 Funcionalidades Implementadas
 
+*   **🚀 Compilação e Entrega Contínua (CI/CD v4):** Automatização de compilação configurada via GitHub Actions utilizando os pacotes de nuvem mais recentes. Toda alteração dispara os testes e empacota o instalador nativo (**APK Debug**) na aba Actions de maneira visível para download.
 *   **🎨 Customização Dinâmica por Identidade Visual:** Cadastro completo do Perfil do Criador contendo nome, clube associado (opcional), cidade, estado e até 4 raças focais do criatório. O sistema lê o arquivo de logo do canaril anexado para extrair e reconfigurar as paletas de cores internas do aplicativo dinamicamente.
 *   **🌳 Rastreabilidade e Árvore Genealógica:** Banco de dados expandido com suporte a filiação direta (`idPaiAnilha` e `idMaeAnilha`). Implementação de algoritmos de busca recursiva capazes de compilar e exportar árvores genealógicas completas para emissão de certificados de linhagem.
 *   **🛒 Rastreamento Avançado de Origem de Plantel:** Registro minucioso sobre a procedência de novas matrizes inseridas no plantel, com campos para identificar se o pássaro é nascido no criatório, adquirido de terceiros (com especificação do clube e nome do canaril) ou comprado em pet shops/lojas comerciais.
@@ -11,14 +14,14 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 *   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
 *   **🧪 Suite de Testes Automatizados:** Cobertura de testes unitários (`flutter_test`) na raiz do projeto para validar algoritmos de cálculo de fertilidade, prevenções de erros matemáticos (divisão por zero) e precisão na geração dos cronogramas biológicos de choco de 13 dias.
 *   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
-*   **🏥 Prontuário Clínico Digital:** Módulo avançado para monitoramento de sintomas e doenças comuns (como Peito Seco/Coccidiose e Ácaro de Traqueia), histórico de tratamentos ministrados com controle rigoroso de dosagens e status clínico (Em Tratamento, Curado ou Óbito).
-*   **🥚 Calculadora Biológica de Choco:** Agenda automatizada de manejo ativada a partir da data de início do choco para dar previsibilidade ao criador e evitar o abandono do ninho.
 *   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` de 5 posições acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todas as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado de carregamento das telas.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
 
 ```text
 canary_control_pro/
+├── .github/workflows/       # 🚀 Configurações de compilação em nuvem (CI/CD)
+│   └── build_app.yml             # Script v4 de automação de testes e geração de APK
 ├── assets/                  # Armazenamento de mídias e fotos do plantel (.gitkeep)
 ├── lib/
 │   ├── database/            # Camada de Persistência Local Segura (SQLite V2)
@@ -49,6 +52,9 @@ canary_control_pro/
 *   **`historico_saude`**: Tabela de prontuários com relacionamento lógico associado à ave em tratamento.
 *   **`ciclos_reproducao`**: Tabela de controle de choco identificada pelo ID da gaiola.
 
-## 🎨 Identidade Visual e Interface
+## 🛠️ Requisitos de Ambiente
 
-O aplicativo foi projetado sob as diretrizes do Material Design em **Dark Mode**, garantindo conforto visual para o uso dentro do criatório, utilizando como base a cor **Amarelo Canário Canônico (`#FFD700`)** para destaques de status e alertas prioritários, alternando para a paleta da logo enviada no cadastro do criador.
+*   **Flutter SDK:** `>= 3.0.0`
+*   **Dart Language:** `>= 3.0.0 < 4.0.0`
+*   **Dependências Principais:** `sqflite` (Banco de dados), `path` (Diretórios do sistema), `cupertino_icons` (Ícones).
+*   
