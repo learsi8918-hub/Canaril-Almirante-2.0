@@ -1,21 +1,30 @@
-name: canaril_almirante
-description: "Sistema Profissional de Gestao de Plantel e Genetica - Canaril Almirante"
-publish_to: 'none'
+name: canary_control_pro
+description: "Aplicativo profissional para controle genético, produtivo e sanitário de canarís."
+publish_to: 'none' # Impede a publicação acidental no pub.dev
+
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0' # Garante compatibilidade com o Flutter moderno
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.5
+
+  # Ícones nativos adicionais para a interface médica e de reprodução
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  
+  # Padronização de código profissional para o GitHub
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
-  
+
+  # Configuração pronta para quando você decidir colocar fotos dos canários
+  assets:
+    - assets/
+    
