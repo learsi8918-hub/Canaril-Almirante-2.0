@@ -12,7 +12,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
     *   *12º Dia:* Colocação da banheira (Aumento da umidade para quebrar a casca)
     *   *13º Dia:* Previsão exata do nascimento dos filhotes
     *   *18º Dia:* Período ideal para anilhamento oficial
-*   **🍂 Registro de Baixas:** Estrutura nativa preparada para controlar a saída do plantel identificando os motivos comerciais ou de manejo (Venda, Doação ou Óbito).
+*   **🍂 Registro de Baixas do Plantel:** Módulo especializado para controle rigoroso do inventário e ciclo de vida das aves. Registra as saídas do criatório categorizadas por motivo comercial ou clínico (Venda com valor/comprador, Doação ou Óbito detalhado), permitindo futuras auditorias de mortalidade e faturamento.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
 
@@ -27,6 +27,7 @@ canary_control_pro/
 │   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco
 │   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos
 │   ├── screens/             # Camada Visual (Interface Gráfica com o Criador)
+│   │   ├── baixa_screen.dart     # Gerenciamento de saídas, vendas e óbitos do plantel
 │   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
 │   │   ├── dashboard_screen.dart # Simulador genético e ranking de reprodutores
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
