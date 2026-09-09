@@ -1,33 +1,26 @@
 class Ave {
   final String anilha;         
-  final String clubeSigla;     
-  final String sexo;           
-  final String tipoFob;        
+  final String clubeSigla;     // Ex: SOGO, OZ, GZ
+  final String sexo;           // 'M' ou 'F'
+  final String tipoFob;        // Cor ou Porte
   final String mutacaoRaca;    
   final String porteDetalhe;   
   final bool comTopete;        
   final String fotoPath;
   
-  final bool ehPortador;       
-  final String? mutacaoPortada;
-  final String fatorMorfologico; 
+  // Controle de Localização e Origem Detalhado
+  String numeroGaiola;         // Vinculação física no canaril
+  final String origemTipo;     // 'Nascido', 'Adquirido', 'Pet Shop'
+  final String? nomeCriadorOrigem; // Nome do canaril/criador que vendeu
+  final String? clubeCriadorOrigem;// Sigla do clube do criador de origem
 
-  // Novas Regras de Controle de Plantel Avançado e Origem
-  final String origemTipo;         // 'Nascido no Canaril', 'Adquirido de Outro Canaril', 'Pet Shop / Loja'
-  final String? canarilProcedencia;// Nome do criatório de onde veio
-  final String? clubeOrigem;       // Clube associado da ave comprada
-
-  // Mapeamento de Filiação (Árvore Genealógica)
-  final String? idPaiAnilha;       
-  final String? idMaeAnilha;       
-
-  String status;               
-  DateTime? dataBaixa;         
-  String? motivoBaixaDetalhe;  
-
+  // Histórico Reprodutivo Coletado para os Rankings
   int totalOvos = 0;
   int ovosFerteis = 0;
   int filhotesNascidos = 0;
+
+  // Notas Editáveis do Padrão Ornitológico
+  String observacaoMutacao;
 
   Ave({
     required this.anilha,
@@ -38,23 +31,16 @@ class Ave {
     required this.porteDetalhe,
     required this.comTopete,
     required this.fotoPath,
+    required this.numeroGaiola,
     required this.origemTipo,
-    this.canarilProcedencia,
-    this.clubeOrigem,
-    this.idPaiAnilha,
-    this.idMaeAnilha,
-    this.ehPortador = false,
-    this.mutacaoPortada,
-    this.fatorMorfologico = 'Fator Puro',
-    this.status = 'Ativa',
-    this.dataBaixa,
-    this.motivoBaixaDetalhe,
+    this.nomeCriadorOrigem,
+    this.clubeCriadorOrigem,
+    this.observacaoMutacao = '',
   });
 
   String get identificadorOficial => '$clubeSigla-$anilha';
 
   double get taxaFertilidade => totalOvos > 0 ? (ovosFerteis / totalOvos) * 100 : 0.0;
-  double get taxaEclosao => ovosFerteis > 0 ? (filhotesNascidos / ovosFerteis) * 100 : 0.0;
 
   Map<String, dynamic> toMap() {
     return {
@@ -64,22 +50,16 @@ class Ave {
       'tipoFob': tipoFob,
       'mutacaoRaca': mutacaoRaca,
       'porteDetalhe': porteDetalhe,
-      'comTopete': comTopete ? 1 : 0, 
+      'comTopete': comTopete ? 1 : 0,
       'fotoPath': fotoPath,
-      'ehPortador': ehPortador ? 1 : 0,
-      'mutacaoPortada': mutacaoPortada,
-      'fatorMorfologico': fatorMorfologico,
-      'status': status,
-      'dataBaixa': dataBaixa?.toIso8601String(), 
-      'motivoBaixaDetalhe': motivoBaixaDetalhe,
+      'numeroGaiola': numeroGaiola,
+      'origemTipo': origemTipo,
+      'nomeCriadorOrigem': nomeCriadorOrigem,
+      'clubeCriadorOrigem': clubeCriadorOrigem,
       'totalOvos': totalOvos,
       'ovosFerteis': ovosFerteis,
       'filhotesNascidos': filhotesNascidos,
-      'origemTipo': origemTipo,
-      'canarilProcedencia': canarilProcedencia,
-      'clubeOrigem': clubeOrigem,
-      'idPaiAnilha': idPaiAnilha,
-      'idMaeAnilha': idMaeAnilha,
+      'observacaoMutacao': observacaoMutacao,
     };
   }
 
@@ -93,30 +73,14 @@ class Ave {
       porteDetalhe: map['porteDetalhe'],
       comTopete: map['comTopete'] == 1,
       fotoPath: map['fotoPath'] ?? '',
-      ehPortador: map['ehPortador'] == 1,
-      mutacaoPortada: map['mutacaoPortada'],
-      fatorMorfologico: map['fatorMorfologico'] ?? 'Fator Puro',
-      status: map['status'] ?? 'Ativa',
-      dataBaixa: map['dataBaixa'] != null ? DateTime.parse(map['dataBaixa']) : null,
-      motivoBaixaDetalhe: map['motivoBaixaDetalhe'],
+      numeroGaiola: map['numeroGaiola'] ?? '',
       origemTipo: map['origemTipo'] ?? 'Nascido no Canaril',
-      canarilProcedencia: map['canarilProcedencia'],
-      clubeOrigem: map['clubeOrigem'],
-      idPaiAnilha: map['idPaiAnilha'],
-      idMaeAnilha: map['idMaeAnilha'],
+      nomeCriadorOrigem: map['nomeCriadorOrigem'],
+      clubeCriadorOrigem: map['clubeCriadorOrigem'],
+      observacaoMutacao: map['observacaoMutacao'] ?? '',
     )
       ..totalOvos = map['totalOvos'] ?? 0
       ..ovosFerteis = map['ovosFerteis'] ?? 0
       ..filhotesNascidos = map['filhotesNascidos'] ?? 0;
   }
-}
-
-class BancoDadosFOB {
-  static const List<String> categorias = ['Canário de Cor', 'Canário de Porte'];
-  static const List<String> mutacoesCor = [
-    'Branco Dominante', 'Branco Recessivo', 'Amarelo Mosaico', 'Vermelho Mosaico', 'Ágata Amarelo', 'Cobre'
-  ];
-  static const List<String> racasPorte = [
-    'Arlequim Português', 'Gloster Corona', 'Gloster Consort', 'Raza Española', 'Fife Fancy'
-  ];
 }
