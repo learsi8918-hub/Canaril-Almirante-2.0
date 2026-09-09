@@ -4,7 +4,7 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
-*   **🗄️ Persistência Local Total (SQLite Offline):** Integração nativa com o motor de banco de dados SQLite. Todos os canários, prontuários e chocos ficam salvos em segurança na memória interna do smartphone do criador, garantindo funcionamento 100% offline dentro do criatório.
+*   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
 *   **🔬 Laboratório de Acasalamento (Anti-Fator Letal):** Algoritmo de cruzamento em tempo real que analisa o genótipo do casal selecionado. Bloqueia e emite alertas estruturais de risco caso o usuário tente cruzar duas aves *Com Topete* (Fator Letal Homozigótico de 25% de mortalidade embrionária nos ovos).
 *   **📊 Ranking de Fertilidade Dinâmico:** Dashboard analítico que calcula de forma automática a taxa de fertilidade com base nos getters reais de `Ovos Galados` / `Ovos Totais`, gerando uma classificação instantânea dos melhores reprodutores e matrizes do plantel.
 *   **🏥 Prontuário Clínico Digital:** Módulo avançado para monitoramento de sintomas e doenças comuns (como Peito Seco/Coccidiose e Ácaro de Traqueia), histórico de tratamentos ministrados com controle rigoroso de dosagens e status clínico (Em Tratamento, Curado ou Óbito).
@@ -25,11 +25,11 @@ canary_control_pro/
 ├── assets/                  # Armazenamento de mídias e fotos do plantel (.gitkeep)
 ├── lib/
 │   ├── database/            # Camada de Persistência Local Segura (SQLite)
-│   │   └── db_helper.dart        # Inicialização do banco de dados e operações CRUD nativas
+│   │   └── db_helper.dart        # Inicialização do banco de dados e operações CRUD nativas (Aves, Saúde, Choco)
 │   ├── models/              # Camada de Dados, Getters e Regras de Negócio Nativas
 │   │   ├── ave_model.dart        # Cadastro de aves, mutações FOB, portadores e serialização para SQLite
-│   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco
-│   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos
+│   │   ├── ciclo_model.dart      # Gatilhos biológicos e cronograma automatizado do choco com suporte toMap/fromMap
+│   │   └── saude_model.dart      # Prontuário médico e histórico clínico de tratamentos com mapeamento SQLite
 │   ├── screens/             # Camada Visual (Interface Gráfica com o Criador)
 │   │   ├── baixa_screen.dart     # Gerenciamento de saídas, vendas e óbitos do plantel
 │   │   ├── ciclo_screen.dart     # Calendário de reprodução e alertas de manejo do choco
@@ -39,6 +39,12 @@ canary_control_pro/
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
+
+## 🗺️ Modelagem Relacional do Banco de Dados
+
+*   **`aves`**: Tabela principal indexada com chave primária composta por `(clubeSigla, anilha)`.
+*   **`historico_saude`**: Tabela de prontuários com ID único e relacionamento lógico associado à ave em tratamento.
+*   **`ciclos_reproducao`**: Tabela de controle de choco identificada pelo ID da gaiola, vinculando os registros da matriz e do reprodutor.
 
 ## 🎨 Identidade Visual e Interface
 
