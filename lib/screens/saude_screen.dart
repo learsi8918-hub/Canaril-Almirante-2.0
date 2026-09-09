@@ -86,4 +86,99 @@ class _SaudeScreenState extends State<SaudeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Canário: ${ocorrencia.identificadorAve}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFFFD700))),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(ocorrencia.statusTratamento).withOpacity(0.2),
+                                        border: Border.all(color: _getStatusColor(ocorrencia.statusTratamento)),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(ocorrencia.statusTratamento, style: TextStyle(color: _getStatusColor(ocorrencia.statusTratamento), fontWeight: FontWeight.bold, fontSize: 12)),
+                                    ),
+                                  ],
+                                ),
+                                const Divider(height: 16),
+                                Text('🩺 Diagnóstico: ${ocorrencia.doencaOuSintoma}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 4),
+                                Text('💊 Conduta/Tratamento: ${ocorrencia.tratamentoAplicado}', style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+                                const SizedBox(height: 6),
+                                Text('📅 Data: ${ocorrencia.dataDiagnostico.day}/${ocorrencia.dataDiagnostico.month}/${ocorrencia.dataDiagnostico.year}', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFFFD700),
+        child: const Icon(Icons.add_alert, color: Colors.black),
+        onPressed: () => _abrirFormularioCadastro(context),
+      ),
+    );
+  }
+
+  void _abrirFormularioCadastro(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E1E1E),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("🏥 Registrar Ocorrência Médica", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Identificador do Canário (Anilha)', border: OutlineInputBorder()),
+                  value: _aveSelecionada,
+                  items: const [
+                    DropdownMenuItem(value: 'SO-012', child: Text('SO-012 (Arlequim)')),
+                    DropdownMenuItem(value: 'FOB-014', child: Text('FOB-014 (Vermelho Mosaico)')),
+                  ],
+                  onChanged: (val) => setState(() => _aveSelecionada = val!),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(controller: _doencaController, decoration: const InputDecoration(labelText: 'Doença ou Sintomas Observados', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o diagnóstico' : null),
+                const SizedBox(height: 12),
+                TextFormField(controller: _tratamentoController, maxLines: 2, decoration: const InputDecoration(labelText: 'Medicamento / Dosagem / Conduta', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o tratamento' : null),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Status do Tratamento', border: OutlineInputBorder()),
+                  value: _statusSelecionado,
+                  items: const [
+                    DropdownMenuItem(value: 'Em Tratamento', child: Text('Em Tratamento')),
+                    DropdownMenuItem(value: 'Curado', child: Text('Curado')),
+                    DropdownMenuItem(value: 'Morta (Sequela)', child: Text('Morta (Sequela)')),
+                  ],
+                  onChanged: (val) => setState(() => _statusSelecionado = val!),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700)),
+                    onPressed: _registrarOcorrencia,
+                    child: const Text('Salvar na Ficha Médica', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
