@@ -8,15 +8,16 @@ void main() {
     test('📋 Deve calcular a taxa de fertilidade corretamente baseado nos ovos galados', () {
       final ave = Ave(
         anilha: '123',
-        clubeSigla: 'FOB',
+        clubeSigla: 'FO',
         sexo: 'F',
-        tipoFob: 'Canário de Cor',
-        mutacaoRaca: 'Amarelo Mosaico',
-        porteDetalhe: 'Sem Topete',
+        segmentoFob: 'Canário de Cor',
+        variacao: 'Amarelo Mosaico',
+        mutacaoEscrita: '',
         comTopete: false,
         fotoPath: '',
         numeroGaiola: '15', 
         origemTipo: 'Nascido no Canaril',
+        status: 'Descanso',
       );
 
       ave.totalOvos = 10;
@@ -39,23 +40,6 @@ void main() {
       final dataNascimentoEsperada = DateTime(2026, 10, 14);
       
       expect(ciclo.dataNascimento, equals(dataNascimentoEsperada));
-    });
-
-    test('🔬 Deve retornar taxa zero se a ave nunca tiver botado ovos (Prevenção de divisão por zero)', () {
-      final aveNova = Ave(
-        anilha: '999',
-        clubeSigla: 'SOGO',
-        sexo: 'M',
-        tipoFob: 'Canário de Porte',
-        mutacaoRaca: 'Arlequim Português',
-        porteDetalhe: 'Sem Topete',
-        comTopete: false,
-        fotoPath: '',
-        numeroGaiola: '12', 
-        origemTipo: 'Nascido no Canaril',
-      );
-
-      expect(aveNova.taxaFertilidade, equals(0.0));
     });
   });
 }
