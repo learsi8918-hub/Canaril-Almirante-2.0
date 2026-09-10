@@ -14,7 +14,6 @@ void main() {
         variacao: 'Amarelo Mosaico',
         mutacaoEscrita: '',
         comTopete: false,
-        fotoPath: '',
         numeroGaiola: '15', 
         origemTipo: 'Nascido no Canaril',
         status: 'Descanso',
@@ -29,14 +28,13 @@ void main() {
     test('⚠️ Deve disparar o gatilho biológico correto de 13 dias para o nascimento', () {
       final dataChoco = DateTime(2026, 10, 1);
       
-      // CORREÇÃO: Adicionado o parâmetro obrigatório tipoManejoMacho exigido pelo modelo de produção
       final ciclo = CicloReproducao(
         idGaiola: 'Gaiola 15',
         sistemaAcasalamento: 'Bigamia', 
         idMacho: 'GZ-035',
         idFemea: 'OZ-012',
         dataInicioChoco: dataChoco,
-        tipoManejoMacho: 'Sempre Junto', // Campo corrigido
+        tipoManejoMacho: 'Sempre Junto',
       );
 
       final dataNascimentoEsperada = DateTime(2026, 10, 14);
