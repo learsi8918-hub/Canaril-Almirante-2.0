@@ -1,0 +1,27 @@
+name: canary_control_pro
+description: Canary Control Pro - sistema profissional e editável de gestão de canários.
+publish_to: 'none'
+version: 13.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  csv: ^6.0.0
+  share_plus: ^10.0.2
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  image_picker: ^1.1.2
+  crypto: ^3.0.6
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/catalogo_fob.csv
