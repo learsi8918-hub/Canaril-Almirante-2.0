@@ -6,7 +6,7 @@ void main() {
   group('🧪 Testes de Regras Ornitológicas - CanaryControl Pro', () {
     
     test('📋 Deve calcular a taxa de fertilidade corretamente baseado nos ovos galados', () {
-      // CORREÇÃO: Adicionado o parâmetro obrigatório origemTipo exigido pelo modelo atualizado
+      // Injetados os parâmetros obrigatórios de controle de gaiola e procedência conforme o novo modelo
       final ave = Ave(
         anilha: '123',
         clubeSigla: 'FOB',
@@ -16,7 +16,8 @@ void main() {
         porteDetalhe: 'Sem Topete',
         comTopete: false,
         fotoPath: '',
-        origemTipo: 'Nascido no Canaril', // Campo corrigido
+        numeroGaiola: '15', 
+        origemTipo: 'Nascido no Canaril',
       );
 
       ave.totalOvos = 10;
@@ -28,12 +29,13 @@ void main() {
     test('⚠️ Deve disparar o gatilho biológico correto de 13 dias para o nascimento', () {
       final dataChoco = DateTime(2026, 10, 1);
       
+      // Ajustado para o modelo relacional de Bigamia/Poligamia por gaiola compartilhada
       final ciclo = CicloReproducao(
-        idGaiola: 'Gaiola 01',
-        idMacho: 'SO-001',
-        idFemea: 'SO-002',
+        idGaiola: 'Gaiola 15',
+        sistemaAcasalamento: 'Bigamia', 
+        idMacho: 'GZ-035',
+        idFemea: 'OZ-012',
         dataInicioChoco: dataChoco,
-        tipoManejoMacho: 'Sempre Junto',
       );
 
       final dataNascimentoEsperada = DateTime(2026, 10, 14);
@@ -42,17 +44,18 @@ void main() {
     });
 
     test('🔬 Deve retornar taxa zero se a ave nunca tiver botado ovos (Prevenção de divisão por zero)', () {
-      // CORREÇÃO: Adicionado o parâmetro obrigatório origemTipo exigido pelo modelo atualizado
+      // Injetados os parâmetros obrigatórios de controle de gaiola e procedência conforme o novo modelo
       final aveNova = Ave(
         anilha: '999',
-        clubeSigla: 'SO',
+        clubeSigla: 'SOGO',
         sexo: 'M',
         tipoFob: 'Canário de Porte',
         mutacaoRaca: 'Arlequim Português',
         porteDetalhe: 'Sem Topete',
         comTopete: false,
         fotoPath: '',
-        origemTipo: 'Nascido no Canaril', // Campo corrigido
+        numeroGaiola: '12', 
+        origemTipo: 'Nascido no Canaril',
       );
 
       expect(aveNova.taxaFertilidade, equals(0.0));
