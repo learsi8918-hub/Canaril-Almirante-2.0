@@ -11,7 +11,6 @@ class PlantelCadastroScreen extends StatefulWidget {
 
 class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
   final _formKeyAve = GlobalKey<FormState>();
-  
   final _anilhaController = TextEditingController();
   final _clubeController = TextEditingController();
   String _sexoSelecionado = 'M';
@@ -56,7 +55,6 @@ class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
 
   void _salvarCanarioNoPlantel() async {
     if (_formKeyAve.currentState!.validate()) {
-      // Regra de Validação FOB: Alerta de cruzamento e segurança (Topete x Topete avaliado no acasalamento)
       final novaAve = Ave(
         anilha: _anilhaController.text,
         clubeSigla: _clubeController.text.toUpperCase(),
@@ -88,11 +86,10 @@ class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
       _obsController.clear();
 
       _atualizarListaAves();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Ave cadastrada e salva com sucesso no SQLite!'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Ave gravada com sucesso no SQLite!'), backgroundColor: Colors.green));
     }
   }
-
-  @override
+    @override
   Widget build(BuildContext context) {
     List<String> itensVariacao = _segmentoFobSelecionado == 'Canário de Cor' 
         ? CatalogoOficialFOB.variacoesCor 
@@ -134,14 +131,14 @@ class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    CheckboxListTile(title: const Text("Possui Topete? (Fator Genético)"), value: _temTopete, onChanged: (val) => setState(() => _temTopete = val!), activeColor: const Color(0xFFFFD700)),
+                    CheckboxListTile(title: const Text("Possui Topete?"), value: _temTopete, onChanged: (val) => setState(() => _temTopete = val!), activeColor: const Color(0xFFFFD700)),
                     const SizedBox(height: 16),
                     const Text("🧬 Catálogo Oficial da Raça", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _segmentoFobSelecionado,
                       decoration: const InputDecoration(labelText: 'Segmento Ornitológico', border: OutlineInputBorder()),
-                      items: CatalogoOficialFOB.segmentos.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      items: CatalogoOficialFOB.segments.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                       onChanged: (val) => _atualizarVariacoes(val!),
                     ),
                     const SizedBox(height: 12),
@@ -152,7 +149,7 @@ class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
                       onChanged: (val) => setState(() => _variacaoSelecionada = val!),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(controller: _mutacaoEscritaController, decoration: const InputDecoration(labelText: 'Mutação Customizada (Ex: Portador de Jaspe)', border: OutlineInputBorder())),
+                    TextFormField(controller: _mutacaoEscritaController, decoration: const InputDecoration(labelText: 'Mutação Customizada', border: OutlineInputBorder())),
                     const SizedBox(height: 16),
                     const Text("🌳 Filiação (Árvore Genealógica)", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 12),
@@ -169,4 +166,29 @@ class _PlantelCadastroScreenState extends State<PlantelCadastroScreen> {
                     DropdownButtonFormField<String>(
                       value: _origemTipoSelecionado,
                       decoration: const InputDecoration(labelText: 'Origem', border: OutlineInputBorder()),
-                      items: const [onChanged: (val) => setState(() => _origemTipoSelecionado = val!),),const SizedBox(height: 12),if (_origemTipoSelecionado == 'Adquirido de Outro Canaril') ...[TextFormField(controller: _nomeCriadorOrigemController, decoration: const InputDecoration(labelText: 'Nome do Canaril de Origem', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o nome' : null),const SizedBox(height: 12),TextFormField(controller: _clubeCriadorOrigemController, maxLength: 2, decoration: const InputDecoration(labelText: 'Clube de Origem (2 Letras)', border: OutlineInputBorder(), counterText: ""), validator: (val) => val!.length != 2 ? 'Use 2 letras' : null),const SizedBox(height: 12),],TextFormField(controller: _obsController, maxLines: 2, decoration: const InputDecoration(labelText: 'Observações / Notas Extras', border: OutlineInputBorder())),const SizedBox(height: 20),SizedBox(width: double.infinity, height: 48, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700)), onPressed: _salvarCanarioNoPlantel, child: const Text('Confirmar e Gravar no Banco', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),const SizedBox(height: 24),const Text("📋 Aves Gravadas no SQLite", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),const SizedBox(height: 8),_listaAvesReal.isEmpty? const Text("Banco de dados limpo.", style: TextStyle(color: Colors.grey, fontSize: 12)): ListView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _listaAvesReal.length, itemBuilder: (context, i) => Card(child: ListTile(leading: Icon(_listaAvesReal[i].sexo == 'M' ? Icons.male : Icons.female, color: _listaAvesReal[i].sexo == 'M' ? Colors.blue : Colors.pink), title: Text(_listaAvesReal[i].identificadorOficial), subtitle: Text('Gaiola: ${_listaAvesReal[i].numeroGaiola} | ${_listaAvesReal[i].variacao}')))),],),),),);}}
+                      items: const [DropdownMenuItem(value: 'Nascido no Canaril', child: Text('Nascido no Canaril')), DropdownMenuItem(value: 'Adquirido de Outro Canaril', child: Text('Adquirido de Outro Canaril')), DropdownMenuItem(value: 'Pet Shop / Loja de Animais', child: Text('Pet Shop / Loja'))],
+                      onChanged: (val) => setState(() => _origemTipoSelecionado = val!),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_origemTipoSelecionado == 'Adquirido de Outro Canaril') ...[
+                      TextFormField(controller: _nomeCriadorOrigemController, decoration: const InputDecoration(labelText: 'Nome do Canaril de Origem', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o nome' : null),
+                      const SizedBox(height: 12),
+                      TextFormField(controller: _clubeCriadorOrigemController, maxLength: 2, decoration: const InputDecoration(labelText: 'Clube de Origem (2 Letras)', border: OutlineInputBorder(), counterText: ""), validator: (val) => val!.length != 2 ? 'Use 2 letras' : null),
+                      const SizedBox(height: 12),
+                    ],
+                    TextFormField(controller: _obsController, maxLines: 2, decoration: const InputDecoration(labelText: 'Observações / Notas Extras', border: OutlineInputBorder())),
+                    const SizedBox(height: 20),
+                    SizedBox(width: double.infinity, height: 48, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700)), onPressed: _salvarCanarioNoPlantel, child: const Text('Confirmar e Gravar no Banco', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),
+                    const SizedBox(height: 24),
+                    const Text("📋 Aves Gravadas no SQLite", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 8),
+                    _listaAvesReal.isEmpty
+                        ? const Text("Banco de dados limpo.", style: TextStyle(color: Colors.grey, fontSize: 12))
+                        : ListView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _listaAvesReal.length, itemBuilder: (context, i) => Card(child: ListTile(leading: Icon(_listaAvesReal[i].sexo == 'M' ? Icons.male : Icons.female, color: _listaAvesReal[i].sexo == 'M' ? Colors.blue : Colors.pink), title: Text(_listaAvesReal[i].identificadorOficial), subtitle: Text('Gaiola: ${_listaAvesReal[i].numeroGaiola} | ${_listaAvesReal[i].variacao}')))),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
