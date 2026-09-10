@@ -26,18 +26,17 @@ jobs:
       - name: Rodar_Testes
         run: flutter test
         
-      # 🚀 PASSO 1: Cria fisicamente a estrutura de pastas nativas
+      # 🚀 PASSO 1: Cria a estrutura de suporte mobile nativo
       - name: Gerar_Configuracoes_Nativas_Android
         run: flutter create . --platforms=android
         
-      # 🚀 PASSO 2: Aguarda as pastas carregarem e aplica a injeção do Java 8
-      - name: Configurar_Java8_Desugaring_Nativo
+      # 🚀 PASSO 2: Varredura dinâmica que encontra e corrige o build.gradle em qualquer subpasta
+      - name: Configurar_Java8_Desugaring_Dinamico
         run: |
-          sleep 5
-          sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/' android/app/build.gradle
-          sed -i 's/dependencies {/dependencies {\n        coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"/' android/app/build.gradle
+          find . -name "build.gradle" -exec sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/' {} \;
+          find . -name "build.gradle" -exec sed -i 's/dependencies {/dependencies {\n        coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"/' {} \;
           
-      # 🚀 PASSO 3: Realiza o fechamento e empacotamento completo do APK
+      # 🚀 PASSO 3: Executa o empacotamento completo do instalador móvel
       - name: Compilar_Instalador
         run: flutter build apk --debug
       - name: Criar_Artefato_Disponivel
@@ -45,3 +44,4 @@ jobs:
         with:
           name: meu-canaril-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+          
