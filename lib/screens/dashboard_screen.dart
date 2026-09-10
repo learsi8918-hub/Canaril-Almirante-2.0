@@ -139,10 +139,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
-
-  @override
+    @override
   Widget build(BuildContext context) {
-    // Computação Separada por Sexo para Geração de Rankings Distintos
     List<Ave> rankingMachos = _plantelGlobal.where((a) => a.sexo == 'M').toList()
       ..sort((a, b) => b.taxaFertilidade.compareTo(a.taxaFertilidade));
     
@@ -162,7 +160,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- BLOCO 1: CADASTRO DO CRIADOR DINÂMICO ---
             Card(
               color: const Color(0xFF1A1A1A),
               shape: RoundedRectangleBorder(side: BorderSide(color: _corDestaqueLogo.withOpacity(0.6)), borderRadius: BorderRadius.circular(12)),
@@ -187,8 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // --- BLOCO 2: RANKING DOS REPRODUTORES (MACHOS) ---
             Text("🚹 Melhores Reprodutores (Machos)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _corDestaqueLogo)),
             const SizedBox(height: 8),
             ListView.builder(
@@ -198,5 +193,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
               itemBuilder: (context, index) {
                 final ave = rankingMachos[index];
                 return Card(
-                  child: ListTile(leading: const Icon(Icons.male, color: Colors.blue),title: Text(ave.identificadorOficial),subtitle: Text('Gaiola: ${ave.numeroGaiola} | Posturas monitoradas'),trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}% Fert.', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),),);},),const SizedBox(height: 24),// --- BLOCO 3: RANKING DAS MATRIZES (FÊMEAS) ---Text("🚺 Melhores Matrizes (Fêmeas)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _corDestaqueLogo)),const SizedBox(height: 8),ListView.builder(shrinkWrap: true,physics: const NeverScrollableScrollPhysics(),itemCount: rankingFemeas.length,itemBuilder: (context, index) {final ave = rankingFemeas[index];return Card(child: ListTile(leading: const Icon(Icons.female, color: Colors.pink),title: Text(ave.identificadorOficial),subtitle: Text('Gaiola: ${ave.numeroGaiola} | Ovos Postos: ${ave.totalOvos}'),trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}% Fert.', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),),);},),],),),);}}
----
+                  child: ListTile(
+                    leading: const Icon(Icons.male, color: Colors.blue),
+                    title: Text(ave.identificadorOficial),
+                    subtitle: Text('Gaiola: ${ave.numeroGaiola} | Posturas'),
+                    trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}%', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            Text("🚺 Melhores Matrizes (Fêmeas)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _corDestaqueLogo)),
+            const SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rankingFemeas.length,
+              itemBuilder: (context, index) {
+                final ave = rankingFemeas[index];
+                return Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.female, color: Colors.pink),
+                    title: Text(ave.identificadorOficial),
+                    subtitle: Text('Gaiola: ${ave.numeroGaiola} | Ovos: ${ave.totalOvos}'),
+                    trailing: Text('${ave.taxaFertilidade.toStringAsFixed(0)}%', style: TextStyle(color: _corDestaqueLogo, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
