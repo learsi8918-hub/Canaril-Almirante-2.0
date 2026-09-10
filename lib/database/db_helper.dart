@@ -6,8 +6,8 @@ import '../models/ciclo_model.dart';
 import '../models/criador_model.dart';
 
 class DBHelper {
-  static const String _dbName = 'canaril_control.db';
-  static const int _dbVersion = 2; // Versão incrementada para atualizar tabelas
+  static const String _dbName = 'canaril_control_pro.db';
+  static const int _dbVersion = 3; // Upgrade de versão para suporte a gatilhos automáticos
 
   DBHelper._privateConstructor();
   static final DBHelper instance = DBHelper._privateConstructor();
@@ -28,103 +28,82 @@ class DBHelper {
       path,
       version: _dbVersion,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Tabela de Aves atualizada com campos detalhados de procedência
+    // 1. Tabela de Perfil do Criador (Suporte a Logo e Cores Customizadas)
+    await db.execute('''
+      CREATE TABLE perfil_criador (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        siglaClube TEXT NOT NULL, -- Validação de 2 letras na UI
+        logoPath TEXT NOT NULL,    -- Caminho ou HEX extraído da cor
+        cidade TEXT NOT NULL,
+        estado TEXT NOT NULL
+      )
+    ''');
+
+    // 2. Tabela de Aves (Com trava de topete, rastreamento de origem, filiação e gaiola)
     await db.execute('''
       CREATE TABLE aves (
-        anilha TEXT,
-        clubeSigla TEXT,
-        sexo TEXT,
-        tipoFob TEXT,
-        mutacaoRaca TEXT,
-        porteDetalhe TEXT,
-        comTopete INTEGER,
-        fotoPath TEXT,
-        ehPortador INTEGER,
-        mutacaoPortada TEXT,
-        fatorMorfologico TEXT,
-        status TEXT,
-        dataBaixa TEXT,
-        motivoBaixaDetalhe TEXT,
-        totalOvos INTEGER,
-        ovosFerteis INTEGER,
-        filhotesNascidos INTEGER,
-        origemTipo TEXT,          -- Nascido, Adquirido, PetShop
-        canarilProcedencia TEXT,  -- Nome do canaril de origem
-        clubeOrigem TEXT,         -- Clube da ave adquirida
+        anilha TEXT NOT NULL,
+        clubeSigla TEXT NOT NULL, -- Strict: 2 letras
+        sexo TEXT NOT NULL,       -- M ou F
+        segmentoFob TEXT NOT NULL, -- Cor, Porte, Canto
+        variacao TEXT NOT NULL,   -- Amarelo Mosaico, Arlequim Português, etc.
+        mutacaoEscrita TEXT,      -- Portador de Jaspe, etc.
+        comTopete INTEGER NOT NULL,-- 1 = Sim, 0 = Não
+        numeroGaiola TEXT NOT NULL,
+        origemTipo TEXT NOT NULL,  -- Nascido, Adquirido, PetShop
+        nomeCriadorOrigem TEXT,
+        clubeOrigem TEXT,
+        status TEXT NOT NULL,     // Macho: Reprodução, Tratamento | Fêmea: Descanso, Choco, Postura, com Filhotes
         idPaiAnilha TEXT,         -- Para Árvore Genealógica
         idMaeAnilha TEXT,         -- Para Árvore Genealógica
+        totalOvos INTEGER DEFAULT 0,
+        ovosFerteis INTEGER DEFAULT 0,
+        filhotesNascidos INTEGER DEFAULT 0,
+        abandonosNinho INTEGER DEFAULT 0,
+        observacoes TEXT,
         PRIMARY KEY (clubeSigla, anilha)
       )
     ''');
 
+    // 3. Tabela de Reprodução Avançada (Suporte a Monogamia, Bigamia e Poligamia de Gaiola)
+    await db.execute('''
+      CREATE TABLE ciclos_reproducao (
+        idGaiola TEXT NOT NULL,
+        sistemaAcasalamento TEXT NOT NULL, -- Monogamia, Bigamia, Poligamia
+        idMacho TEXT NOT NULL,              -- Clube-Anilha
+        idFemea TEXT NOT NULL,              -- Clube-Anilha
+        tipoManejoMacho TEXT NOT NULL,      -- Sempre Junto, 3º Ovo, Janela_Copula (5h-9h)
+        dataInicioChoco TEXT NOT NULL,
+        quantidadeOvos INTEGER DEFAULT 0,
+        ovosFerteis INTEGER DEFAULT 0,
+        filhotesVivos INTEGER DEFAULT 0,
+        PRIMARY KEY (idGaiola, idFemea)     -- Permite mais de uma fêmea na mesma gaiola (Bigamia)
+      )
+    ''');
+
+    // 4. Tabela Sanitária (Controle de ciclos de remédio e tratamentos)
     await db.execute('''
       CREATE TABLE historico_saude (
         id TEXT PRIMARY KEY,
-        identificadorAve TEXT,
-        dataDiagnostico TEXT,
-        doencaOuSintoma TEXT,
-        treatmentoAplicado TEXT,
-        statusTratamento TEXT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE ciclos_reproducao (
-        idGaiola TEXT PRIMARY KEY,
-        idMacho TEXT,
-        idFemea TEXT,
-        dataInicioChoco TEXT,
-        quantidadeOvos INTEGER,
-        ovosFerteis INTEGER,
-        filhotesVivos INTEGER,
-        tipoManejoMacho TEXT
-      )
-    ''');
-
-    // Nova tabela para persistir o Perfil do Criador e Temas Dinâmicos
-    await db.execute('''
-      CREATE TABLE perfil_criador (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT,
-        clube TEXT,
-        logoPath TEXT,
-        racasSelecionadas TEXT,   -- Salvo como String separada por vírgulas
-        cidade TEXT,
-        estado TEXT
+        identificadorAve TEXT NOT NULL,
+        dataDiagnostico TEXT NOT NULL,
+        doencaOuSintoma TEXT NOT NULL,
+        tratamentoAplicado TEXT NOT NULL,
+        duracaoDias INTEGER DEFAULT 5,     -- Ciclos padrão (Ex: 5 dias)
+        statusTratamento TEXT NOT NULL     -- Em Tratamento, Curado, Óbito
       )
     ''');
   }
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Scripts de migração caso o app já estivesse rodando na V1
-      await db.execute('ALTER TABLE aves ADD COLUMN origemTipo TEXT;');
-      await db.execute('ALTER TABLE aves ADD COLUMN canarilProcedencia TEXT;');
-      await db.execute('ALTER TABLE aves ADD COLUMN clubeOrigem TEXT;');
-      await db.execute('ALTER TABLE aves ADD COLUMN idPaiAnilha TEXT;');
-      await db.execute('ALTER TABLE aves ADD COLUMN idMaeAnilha TEXT;');
-      await db.execute('''
-        CREATE TABLE perfil_criador (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nome TEXT,
-          clube TEXT,
-          logoPath TEXT,
-          racasSelecionadas TEXT,
-          cidade TEXT,
-          estado TEXT
-        )
-      ''');
-    }
-  }
+  /// -----------------------------------------------------------------------
+  /// OPERAÇÕES DO BANCO DE DADOS (RESOLUÇÃO DE CONFLITOS DE GRAVAÇÃO)
+  /// -----------------------------------------------------------------------
 
-  /// -----------------------------------------------------------------------
-  /// CRUD - CRIPTO/PERFIL DO CRIADOR
-  /// -----------------------------------------------------------------------
   Future<int> salvarPerfil(CriadorPerfil perfil) async {
     final db = await instance.database;
     return await db.insert(
@@ -141,49 +120,51 @@ class DBHelper {
     return CriadorPerfil.fromMap(maps.first);
   }
 
-  /// -----------------------------------------------------------------------
-  /// CRUD - AVES (COM RASTREAMENTO DE PAIS PARA GENEALOGIA)
-  /// -----------------------------------------------------------------------
   Future<int> salvarAve(Ave ave) async {
     final db = await instance.database;
-    return await db.insert('aves', ave.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'aves',
+      ave.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace, // Corrige a trava de não permitir salvar atualizando o registro
+    );
   }
 
   Future<List<Ave>> buscarAvesAtivas() async {
     final db = await instance.database;
-    final List<Map<String, dynamic>> maps = await db.query('aves', where: 'status = ?', whereArgs: ['Ativa']);
+    final List<Map<String, dynamic>> maps = await db.query('aves');
     return List.generate(maps.length, (i) => Ave.fromMap(maps[i]));
   }
 
-  // Busca recursiva para montar a Árvore Genealógica (Pai e Mãe)
-  Future<Map<String, dynamic>> buscarArvoreGenealogica(String anilha) async {
+  /// -----------------------------------------------------------------------
+  /// ALGORITMO RECURSIVO EXCLUSIVO DA ÁRVORE GENEALÓGICA DO FILHOTE
+  /// -----------------------------------------------------------------------
+  Future<Map<String, dynamic>> obterArvoreGenealogica(String clubeSigla, String anilha) async {
     final db = await instance.database;
-    final List<Map<String, dynamic>> resultado = await db.query('aves', where: 'anilha = ?', whereArgs: [anilha], limit: 1);
-    
-    if (resultado.isEmpty) return {'anilha': anilha, 'erro': 'Não encontrada'};
-    
+    final List<Map<String, dynamic>> resultado = await db.query(
+      'aves',
+      where: 'clubeSigla = ? AND anilha = ?',
+      whereArgs: [clubeSigla, anilha],
+      limit: 1,
+    );
+
+    if (resultado.isEmpty) {
+      return {'identificador': '$clubeSigla-$anilha', 'variacao': 'Sem registro ancestral'};
+    }
+
     final ave = resultado.first;
+    final String? paiAnilha = ave['idPaiAnilha'];
+    final String? maeAnilha = ave['idMaeAnilha'];
+
     return {
-      'ave': ave['clubeSigla'] + '-' + ave['anilha'] + ' (' + ave['mutacaoRaca'] + ')',
-      'pai': ave['idPaiAnilha'] != null ? await buscarArvoreGenealogica(ave['idPaiAnilha']) : 'Pai Desconhecido',
-      'mae': ave['idMaeAnilha'] != null ? await buscarArvoreGenealogica(ave['idMaeAnilha']) : 'Mãe Desconhecida',
+      'identificador': '$clubeSigla-$anilha',
+      'variacao': ave['variacao'],
+      'mutacao': ave['mutacaoEscrita'] ?? '',
+      'pai': paiAnilha != null ? await obterArvoreGenealogica(clubeSigla, paiAnilha) : 'Pai Desconhecido',
+      'mae': maeAnilha != null ? await obterArvoreGenealogica(clubeSigla, maeAnilha) : 'Mãe Desconhecida',
     };
   }
 
-  /// -----------------------------------------------------------------------
-  /// CRUD - MÓDULOS SANITÁRIO E REPRODUTIVO MANTIDOS
-  /// -----------------------------------------------------------------------
-  Future<int> salvarOcorrenciaSaude(OcorrenciaSaude ocorrencia) async {
-    final db = await instance.database;
-    return await db.insert('historico_saude', ocorrencia.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<List<OcorrenciaSaude>> buscarHistoricoSaude() async {
-    final db = await instance.database;
-    final List<Map<String, dynamic>> maps = await db.query('historico_saude', orderBy: 'dataDiagnostico DESC');
-    return List.generate(maps.length, (i) => OcorrenciaSaude.fromMap(maps[i]));
-  }
-
+  // Métodos Sanitários e de Ciclos
   Future<int> salvarCicloReproducao(CicloReproducao ciclo) async {
     final db = await instance.database;
     return await db.insert('ciclos_reproducao', ciclo.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
@@ -191,7 +172,7 @@ class DBHelper {
 
   Future<List<CicloReproducao>> buscarCiclosAtivos() async {
     final db = await instance.database;
-    final List<Map<String, dynamic>> maps = await db.query('ciclos_reproducao', orderBy: 'dataInicioChoco DESC');
+    final List<Map<String, dynamic>> maps = await db.query('ciclos_reproducao');
     return List.generate(maps.length, (i) => CicloReproducao.fromMap(maps[i]));
   }
 }
