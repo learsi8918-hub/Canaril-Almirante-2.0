@@ -9,11 +9,14 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 *   **📊 Rankings Reprodutivos Segregados (Machos e Fêmeas):** Módulo de auditoria biológica de alta performance que isola e classifica de forma 100% independente a eficiência de fertilidade dos Reprodutores (Machos) e das Matrizes (Fêmeas) com base no histórico acumulado de ovos galados.
 *   **📐 Gestão Multifêmeas por Gaiola (Bigamia e Poligamia):** Reestruturação relacional completa para controle de haras e gaiolas compartilhadas. Permite indexar e rastrear de forma isolada qual fêmea realizou a postura e eclosão de ovos ligada ao mesmo macho reprodutor (Ex: Gaiola 15 - Fêmea OZ-012 em Bigamia com Macho GZ-035).
 *   **🛒 Rastreamento Detalhado de Origem e Siglas FOB:** Cadastro de aves expandido com suporte a siglas extensas customizadas de clubes. Mapeia rigorosamente o histórico de procedência, incluindo o tipo de aquisição (Nascido, Adquirido ou Pet Shop), o nome do criador/canaril vendedor e a sigla do respectivo clube de origem.
+*   **📊 Central de Exportação de Dados:** Módulo analítico capaz de compilar dados complexos do banco de dados em arquivos formatados estruturados (padrão CSV). Permite extrair relatórios de auditoria ornitológica de matrizes ativas, taxas de fertilidade acumuladas e histórico financeiro de saídas.
 *   **🗄️ Arquitetura SQLite Relacional Offline:** Integração nativa e blindada com o motor de banco de dados SQLite (`sqflite`). Todos os canários, prontuários clínicos e ciclos de choco ficam persistidos com segurança na memória interna do smartphone do criador, permitindo funcionamento 100% independente de internet dentro do criatório.
 *   **🧪 Suite de Testes Automatizados:** Cobertura de testes unitários (`flutter_test`) na raiz do projeto para validar algoritmos de cálculo de fertilidade, prevenções de erros matemáticos (divisão por zero) e precisão na geração dos cronogramas biológicos de choco de 13 dias.
 *   **📱 Navegação Circular Centralizada:** Painel estruturado através de um componente `BottomNavigationBar` de 5 posições acoplado a um `IndexedStack`. Isso permite que o criador navegue entre todas as abas do aplicativo instantaneamente sem perder as informações preenchidas ou o estado de carregamento das telas.
 
 ## 🗄️ Arquitetura do Repositório (Padrão Clean e Modular)
+
+A estrutura de arquivos do projeto está organizada de forma a isolar as responsabilidades e garantir que o aplicativo funcione de maneira rápida, sem travamentos na listagem de dados:
 
 ```text
 canary_control_pro/
@@ -39,6 +42,13 @@ canary_control_pro/
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
+
+## 🗺️ Modelagem Relacional do Banco de Dados
+
+*   **`aves`**: Tabela principal indexada com chave primária composta por `(clubeSigla, anilha)`, expandida com rastreabilidade de linhagem, número de gaiola e procedência comercial detalhada.
+*   **`perfil_criador`**: Tabela de configuração única para armazenar dados regionais e marcas cromáticas dinâmicas do criatório.
+*   **`historico_saude`**: Tabela de prontuários com relacionamento lógico associado à ave em tratamento.
+*   **`ciclos_reproducao`**: Tabela de controle de choco identificada pelo ID da gaiola, suportando regras de acasalamento composto.
 
 ## 🛠️ Requisitos de Ambiente
 
