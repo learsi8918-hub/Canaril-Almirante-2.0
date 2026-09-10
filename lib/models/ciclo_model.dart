@@ -1,9 +1,10 @@
 class CicloReproducao {
-  final String idGaiola;         // Ex: "Gaiola 15"
-  final String sistemaAcasalamento; // "Monogamia", "Bigamia", "Poligamia"
-  final String idMacho;          // Identificador Oficial do Reprodutor (Ex: GZ-035)
-  final String idFemea;          // Identificador Oficial da Fêmea Matriz (Ex: OZ-012)
+  final String idGaiola;         
+  final String sistemaAcasalamento; 
+  final String idMacho;          
+  final String idFemea;          
   final DateTime dataInicioChoco;
+  final String tipoManejoMacho;  // Sempre Junto, Sai no 3º Ovo, Janela_Copula
   int quantidadeOvos;
   int ovosFerteis;
   int filhotesVivos;
@@ -14,6 +15,7 @@ class CicloReproducao {
     required this.idMacho,
     required this.idFemea,
     required this.dataInicioChoco,
+    required this.tipoManejoMacho,
     this.quantidadeOvos = 0,
     this.ovosFerteis = 0,
     this.filhotesVivos = 0,
@@ -22,7 +24,6 @@ class CicloReproducao {
   DateTime get dataOvoscopia => dataInicioChoco.add(const Duration(days: 7));
   DateTime get dataBanheira => dataInicioChoco.add(const Duration(days: 12));
   DateTime get dataNascimento => dataInicioChoco.add(const Duration(days: 13));
-  DateTime get dataAnilhamento => dataInicioChoco.add(const Duration(days: 18));
 
   Map<String, dynamic> toMap() {
     return {
@@ -31,6 +32,7 @@ class CicloReproducao {
       'idMacho': idMacho,
       'idFemea': idFemea,
       'dataInicioChoco': dataInicioChoco.toIso8601String(),
+      'tipoManejoMacho': tipoManejoMacho,
       'quantidadeOvos': quantidadeOvos,
       'ovosFerteis': ovosFerteis,
       'filhotesVivos': filhotesVivos,
@@ -39,11 +41,12 @@ class CicloReproducao {
 
   factory CicloReproducao.fromMap(Map<String, dynamic> map) {
     return CicloReproducao(
-      idGaiola: map['idGaiola'],
+      idGaiola: map['idGaiola'] ?? '',
       sistemaAcasalamento: map['sistemaAcasalamento'] ?? 'Monogamia',
       idMacho: map['idMacho'] ?? '',
       idFemea: map['idFemea'] ?? '',
       dataInicioChoco: DateTime.parse(map['dataInicioChoco']),
+      tipoManejoMacho: map['tipoManejoMacho'] ?? 'Sempre Junto',
       quantidadeOvos: map['quantidadeOvos'] ?? 0,
       ovosFerteis: map['ovosFerteis'] ?? 0,
       filhotesVivos: map['filhotesVivos'] ?? 0,
