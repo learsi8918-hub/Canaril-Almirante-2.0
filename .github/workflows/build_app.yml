@@ -34,7 +34,7 @@ jobs:
       - name: Gerar_Configuracoes_Nativas_Android
         run: flutter create . --platforms=android
         
-      # 🚀 PASSO 2: Injeção de Segurança via Overwrite - Força o suporte a Java 8 Desugaring
+      # 🚀 PASSO 2: Injeção de Segurança via Overwrite - Força o suporte ao Android SDK 36 e Java 8 Desugaring
       - name: Configurar_Java8_Desugaring_Blindado
         run: |
           cat << 'EOF' > android/app/build.gradle
@@ -46,7 +46,7 @@ jobs:
 
           android {
               namespace "com.example.canary_control_pro"
-              compileSdk 34
+              compileSdk 36 // 🔥 Atualizado para a versão 36 exigida pelo SQLite moderno
 
               compileOptions {
                   coreLibraryDesugaringEnabled true
@@ -61,7 +61,7 @@ jobs:
               defaultConfig {
                   applicationId "com.example.canary_control_pro"
                   minSdk 21
-                  targetSdk 34
+                  targetSdk 34 // Mantém o comportamento de runtime estável
                   versionCode 1
                   versionName "1.0.0"
                   multiDexEnabled true
