@@ -4,9 +4,10 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades Implementadas
 
-*   **🦅 Central de Cadastro de Matrizes (Plantel Editável):** Módulo de inclusão dinâmico com formulários de validação para registrar aves informando anilha, sigla oficial do clube (Ex: SOGO, OZ, GZ), número físico da gaiola, sexo, segmento FOB e notas ornitológicas customizáveis com observações editáveis.
+*   **⚙️ Ambiente de Produção 100% Limpo e Editável:** Remoção completa de dados simulados ("mock data") e exemplos estáticos do código. O ecossistema inicia limpo de fábrica; todas as consultas e renderizações realizam transações dinâmicas de leitura e escrita em tabelas locais físicas do SQLite.
+*   **🦅 Central de Cadastro de Matrizes (Plantel Dinâmico):** Inclusão com formulários de validação para registrar aves informando anilha, sigla oficial customizável do clube (Ex: SOGO, OZ, GZ), número físico da gaiola, sexo, segmento FOB e notas ornitológicas editáveis.
 *   **🎨 Customização Cromática Adaptável por Logo:** Mecanismo inteligente integrado ao ciclo de estado dinâmico do aplicativo. Assim que o criador realiza o cadastro ou atualização da logo do canaril, o sistema extrai automaticamente a tonalidade dominante da marca para reconfigurar a paleta de cores e destaques em tempo real.
-*   **📊 Rankings Reprodutivos Segregados (Machos e Fêmeas):** Módulo de auditoria biológica de alta performance que isola e classifica de forma 100% independente a eficiência de fertilidade dos Reprodutores (Machos) e das Matrizes (Fêmeas) com base no histórico acumulado de ovos galados.
+*   **📊 Rankings Reprodutivos Segregados (Machos e Fêmeas):** Módulo de auditoria biológica de alta performance que isola e classifica de forma 100% independente a eficiência de fertilidade dos Reprodutores (Machos) e das Matrizes (Fêmeas) com base no histórico acumulado de ovos galados reais.
 *   **📐 Gestão Multifêmeas por Gaiola (Bigamia e Poligamia):** Reestruturação relacional completa para controle de haras e gaiolas compartilhadas. Permite indexar e rastrear de forma isolada qual fêmea realizou a postura e eclosão de ovos ligada ao mesmo macho reprodutor (Ex: Gaiola 15 - Fêmea OZ-012 em Bigamia com Macho GZ-035).
 *   **🛒 Rastreamento Detalhado de Origem e Siglas FOB:** Cadastro de aves expandido com suporte a siglas extensas customizadas de clubes. Mapeia rigorosamente o histórico de procedência, incluindo o tipo de aquisição (Nascido, Adquirido ou Pet Shop), o nome do criador/canaril vendedor e a sigla do respectivo clube de origem.
 *   **📊 Central de Exportação de Dados:** Módulo analítico capaz de compilar dados complexos do banco de dados em arquivos formatados estruturados (padrão CSV). Permite extrair relatórios de auditoria ornitológica de matrizes ativas, taxas de fertilidade acumuladas e histórico financeiro de saídas.
@@ -40,6 +41,8 @@ canary_control_pro/
 │   │   ├── plantel_cadastro_screen.dart # Cadastro e gerenciamento editável de aves, gaiolas e notas FOB
 │   │   └── saude_screen.dart     # Lançamento e consulta de prontuários médicos
 │   └── main.dart            # Ponto de inicialização do app e gerenciamento do tema escuro
+├── test/                    # 🧪 Camada de Testes Automatizados e Validação de Algoritmos
+│   └── reproducao_test.dart      # Validação de taxas de fertilidade e cronograma do choco
 └── pubspec.yaml             # Arquivo de configuração de pacotes, dependências (sqflite, path) e SDK
 ```
 
