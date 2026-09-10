@@ -45,9 +45,9 @@ class _CicloScreenState extends State<CicloScreen> {
         idMacho: _machoController.text.toUpperCase(),
         idFemea: _femeaController.text.toUpperCase(),
         dataInicioChoco: DateTime.now(),
+        tipoManejoMacho: _manejoMacho,
         quantidadeOvos: int.parse(_ovosController.text),
         ovosFerteis: int.parse(_ferteisController.text),
-        tipoManejoMacho: _manejoMacho,
       );
 
       await DBHelper.instance.salvarCicloReproducao(novoCiclo);
@@ -155,7 +155,7 @@ class _CicloScreenState extends State<CicloScreen> {
                             const Divider(),
                             Text('🔬 Ovoscopia: ${_formatarData(ciclo.dataOvoscopia)}'),
                             Text('🐣 Nascimento: ${_formatarData(ciclo.dataNascimento)}', style: const TextStyle(color: Color(0xFFFFD700))),
-                            Text('💍 Desmame: ${_formatarData(ciclo.dataNascimento.add(const Duration(days: 22))))}', style: const TextStyle(color: Colors.greenAccent)),
+                            Text('💍 Desmame: ${_formatarData(ciclo.dataNascimento.add(const Duration(days: 22)))}', style: const TextStyle(color: Colors.greenAccent)),
                           ],
                         ),
                       ),
