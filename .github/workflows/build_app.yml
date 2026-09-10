@@ -25,9 +25,15 @@ jobs:
         run: flutter pub get
       - name: Rodar_Testes
         run: flutter test
-      # 🚀 INJEÇÃO DE SEGURANÇA MÓVEL: Reconstrói a pasta nativa 'android/' que está faltando no repositório
       - name: Gerar_Configuracoes_Nativas_Android
         run: flutter create . --platforms=android
+        
+      # 🚀 INJEÇÃO NATIVA CONVERTIDA: Ativa o suporte a Java 8 (Desugaring) exigido pelas notificações offline
+      - name: Configurar_Java8_Desugaring_Nativo
+        run: |
+          sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/' android/app/build.gradle
+          sed -i 's/dependencies {/dependencies {\n        coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"/' android/app/build.gradle
+          
       - name: Compilar_Instalador
         run: flutter build apk --debug
       - name: Criar_Artefato_Disponivel
