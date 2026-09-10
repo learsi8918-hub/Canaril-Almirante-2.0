@@ -11,8 +11,6 @@ class CicloScreen extends StatefulWidget {
 
 class _CicloScreenState extends State<CicloScreen> {
   final _formKeyCiclo = GlobalKey<FormState>();
-  
-  // Controladores do Formulário de Choco
   final _gaiolaController = TextEditingController();
   final _machoController = TextEditingController();
   final _femeaController = TextEditingController();
@@ -20,7 +18,7 @@ class _CicloScreenState extends State<CicloScreen> {
   final _ferteisController = TextEditingController();
   
   String _sistemaAcasalamento = 'Monogamia';
-  String _manejoMacho = 'Sempre Junto'; // Opções: Sempre Junto, Sai no 3º Ovo, Janela de Cópula (5h-9h)
+  String _manejoMacho = 'Sempre Junto';
 
   List<CicloReproducao> _ciclosAtivos = [];
   bool _carregando = true;
@@ -53,20 +51,18 @@ class _CicloScreenState extends State<CicloScreen> {
       );
 
       await DBHelper.instance.salvarCicloReproducao(novoCiclo);
-      
       _gaiolaController.clear();
       _machoController.clear();
       _femeaController.clear();
       _ovosController.clear();
       _ferteisController.clear();
-      
       _carregarCiclos();
       Navigator.pop(context);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🥚 Ciclo reprodutivo registrado e alarmes offline agendados!'), backgroundColor: Colors.green),
-      );
     }
+  }
+
+  String _formatarData(DateTime data) {
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
   }
 
   void _abrirFormularioChoco() {
@@ -83,7 +79,7 @@ class _CicloScreenState extends State<CicloScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("🥚 Iniciar Ciclo de Choco e Reprodução", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text("🥚 Iniciar Ciclo de Choco", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -93,7 +89,7 @@ class _CicloScreenState extends State<CicloScreen> {
                       child: DropdownButtonFormField<String>(
                         value: _sistemaAcasalamento,
                         decoration: const InputDecoration(labelText: 'Manejo', border: OutlineInputBorder()),
-                        items: const [DropdownMenuItem(value: 'Monogamia', child: Text('Monogamia')), DropdownMenuItem(value: 'Bigamia', child: Text('Bigamia (Mesma Gaiola)')), DropdownMenuItem(value: 'Poligamia', child: Text('Poligamia (Macho Passa)'))],
+                        items: const [DropdownMenuItem(value: 'Monogamia', child: Text('Monogamia')), DropdownMenuItem(value: 'Bigamia', child: Text('Bigamia')), DropdownMenuItem(value: 'Poligamia', child: Text('Poligamia'))],
                         onChanged: (val) => setModalState(() => _sistemaAcasalamento = val!),
                       ),
                     ),
@@ -102,32 +98,28 @@ class _CicloScreenState extends State<CicloScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _machoController, decoration: const InputDecoration(labelText: 'Macho (Ex: SOGO-35)', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe o macho' : null)),
+                    Expanded(child: TextFormField(controller: _machoController, decoration: const InputDecoration(labelText: 'Macho', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Macho' : null)),
                     const SizedBox(width: 12),
-                    Expanded(child: TextFormField(controller: _femeaController, decoration: const InputDecoration(labelText: 'Fêmea (Ex: OZ-12)', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Informe a fêmea' : null)),
+                    Expanded(child: TextFormField(controller: _femeaController, decoration: const InputDecoration(labelText: 'Fêmea', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Fêmea' : null)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _manejoMacho,
                   decoration: const InputDecoration(labelText: 'Rotina do Macho Reprodutor', border: OutlineInputBorder()),
-                  items: const [
-                    DropdownMenuItem(value: 'Sempre Junto', child: Text('Macho Fica com a Fêmea (Sempre Junto)')),
-                    DropdownMenuItem(value: 'Sai no 3º Ovo', child: Text('Macho Sai após o 3º Ovo')),
-                    DropdownMenuItem(value: 'Janela_Copula', child: Text('Macho Sai após Cópula (5h às 9h)')),
-                  ],
+                  items: const [DropdownMenuItem(value: 'Sempre Junto', child: Text('Macho Fica com a Fêmea')), DropdownMenuItem(value: 'Sai no 3º Ovo', child: Text('Macho Sai após o 3º Ovo')), DropdownMenuItem(value: 'Janela_Copula', child: Text('Macho Sai após Cópula (5h-9h)'))],
                   onChanged: (val) => setModalState(() => _manejoMacho = val!),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: TextFormField(controller: _ovosController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Qtd Ovos Postos', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Qtd' : null)),
+                    Expanded(child: TextFormField(controller: _ovosController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Ovos', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Qtd' : null)),
                     const SizedBox(width: 12),
-                    Expanded(child: TextFormField(controller: _ferteisController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '🔬 Ovos Férteis', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Férteis' : null)),
+                    Expanded(child: TextFormField(controller: _ferteisController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '🔬 Férteis', border: OutlineInputBorder()), validator: (val) => val!.isEmpty ? 'Férteis' : null)),
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(width: double.infinity, height: 48, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700)), onPressed: _registrarNovoCiclo, child: const Text('Salvar e Ativar Cronograma', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),
+                SizedBox(width: double.infinity, height: 48, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700)), onPressed: _registrarNovoCiclo, child: const Text('Salvar Ciclo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),
                 const SizedBox(height: 16),
               ],
             ),
@@ -151,7 +143,6 @@ class _CicloScreenState extends State<CicloScreen> {
                   itemBuilder: (context, index) {
                     final ciclo = _ciclosAtivos[index];
                     final diasDeChoco = DateTime.now().difference(ciclo.dataInicioChoco).inDays;
-                    final ovosNaoFerteis = ciclo.quantidadeOvos - ciclo.ovosFerteis;
 
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -160,27 +151,18 @@ class _CicloScreenState extends State<CicloScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('${ciclo.idGaiola} (${ciclo.sistemaAcasalamento})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
-                                Chip(label: Text('$diasDeChoco° Dia'), backgroundColor: Colors.amber.shade900.withOpacity(0.3)),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text('🚹 Macho: ${ciclo.idMacho} | 🚺 Fêmea: ${ciclo.idFemea}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-                            Text('⏱️ Manejo: ${ciclo.tipoManejoMacho == 'Janela_Copula' ? 'Cópula (5h-9h)' : ciclo.tipoManejoMacho}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                            const Divider(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('🥚 Totais: ${ciclo.quantidadeOvos}', style: const TextStyle(fontSize: 13)),
-                                Text('🔬 Férteis: ${ciclo.ovosFerteis}', style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.bold)),
-                                Text('⚫ Brancos: $ovosNaoFerteis', style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Text('📅 Gatilhos Fixos Calculados:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                            Text('🔬 Ovoscopia: ${_formatarData(ciclo.dataOvoscopia)}', style: const TextStyle(fontSize: 12)),
-                            Text('🐣 Nascimento: ${_formatarData(ciclo.dataNascimento)}', style: const TextStyle(fontSize: 12, color: Color(0xFFFFD700))),
-                            Text('💍 Desmame (Fêmea em descanso): ${_formatarData(ciclo.dataAnilhamento.add(const Duration(days: 17)))}', style: const TextStyle(fontSize: 12, color: Colors.greenAccent)),],),),);},),floatingActionButton: FloatingActionButton(backgroundColor: const Color(0xFFFFD700), onPressed: _abrirFormularioChoco, child: const Icon(Icons.add, color: Colors.black)),);}}
+                            Text('${ciclo.idGaiola} (${ciclo.sistemaAcasalamento})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFFD700))),
+                            const Divider(),
+                            Text('🔬 Ovoscopia: ${_formatarData(ciclo.dataOvoscopia)}'),
+                            Text('🐣 Nascimento: ${_formatarData(ciclo.dataNascimento)}', style: const TextStyle(color: Color(0xFFFFD700))),
+                            Text('💍 Desmame: ${_formatarData(ciclo.dataNascimento.add(const Duration(days: 22))))}', style: const TextStyle(color: Colors.greenAccent)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton(backgroundColor: const Color(0xFFFFD700), onPressed: _abrirFormularioChoco, child: const Icon(Icons.add, color: Colors.black)),
+    );
+  }
+}
