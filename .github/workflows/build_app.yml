@@ -12,33 +12,71 @@ jobs:
     steps:
       - name: Checkout_Codigo
         uses: actions/checkout@v4
+      
       - name: Configurar_Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+      
       - name: Configurar_Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+      
       - name: Baixar_Pacotes
         run: flutter pub get
+      
       - name: Rodar_Testes
         run: flutter test
         
-      # 🚀 PASSO 1: Cria a estrutura de suporte mobile nativo
+      # 🚀 PASSO 1: Reconstrói a estrutura nativa de arquivos limpos
       - name: Gerar_Configuracoes_Nativas_Android
         run: flutter create . --platforms=android
         
-      # 🚀 PASSO 2: Varredura dinâmica que encontra e corrige o build.gradle em qualquer subpasta
-      - name: Configurar_Java8_Desugaring_Dinamico
+      # 🚀 PASSO 2: Injeção de Segurança via Overwrite - Força o suporte a Java 8 Desugaring
+      - name: Configurar_Java8_Desugaring_Blindado
         run: |
-          find . -name "build.gradle" -exec sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/' {} \;
-          find . -name "build.gradle" -exec sed -i 's/dependencies {/dependencies {\n        coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"/' {} \;
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
+
+          android {
+              namespace "com.example.canary_control_pro"
+              compileSdk 34
+
+              compileOptions {
+                  coreLibraryDesugaringEnabled true
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+
+              kotlinOptions {
+                  jvmTarget = "1.8"
+              }
+
+              defaultConfig {
+                  applicationId "com.example.canary_control_pro"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0.0"
+                  multiDexEnabled true
+              }
+          }
+
+          dependencies {
+              coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
+          }
+          EOF
           
       # 🚀 PASSO 3: Executa o empacotamento completo do instalador móvel
       - name: Compilar_Instalador
         run: flutter build apk --debug
+        
       - name: Criar_Artefato_Disponivel
         uses: actions/upload-artifact@v4
         with:
