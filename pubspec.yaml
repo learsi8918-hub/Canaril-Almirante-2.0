@@ -1,33 +1,38 @@
 name: canary_control_pro
 description: "Aplicativo profissional para controle genético, reprodutivo e sanitário de canarís."
-publish_to: 'none' # Impede a publicação acidental do pacote no pub.dev
+publish_to: 'none' # Impede a publicação acidental no pub.dev
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0' # Garante total compatibilidade com o Flutter moderno e Dart 3
+  sdk: '>=3.0.0 <4.0.0' # Garante compatibilidade total com o Dart 3 moderno
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # 🗄️ Persistência de Dados e Banco de Dados Local Seguro
+  # 🗄️ Persistência de Dados e Banco de Dados Local Seguro SQLite
   sqflite: ^2.3.0
   path: ^1.9.0
 
-  # 🎨 Pacote de Elementos Visuais e Ícones Nativos
+  # 🔔 Notificações Locais e Agendamento em Segundo Plano Offline
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.4
+
+  # 🎨 Ícones e Elementos Visuais Nativos da Interface
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   
-  # ⚖️ Padronização de Código e Análise de Boas Práticas para o GitHub
+  # ⚖️ Padronização e Análise de Regras Profissionais de Código para o GitHub
   flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
 
-  # 📸 Configuração Ativa de Assets para Suporte a Fotos do Plantel
+  # 📸 Gerenciador Ativo de Pastas de Mídia e Imagens do Canaril
   assets:
     - assets/
+    
