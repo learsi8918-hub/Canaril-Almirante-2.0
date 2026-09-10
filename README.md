@@ -4,5 +4,6 @@ O **CanaryControl Pro** é um ecossistema mobile profissional desenvolvido em Fl
 
 ## 🚀 Funcionalidades de Produção Implementadas
 
-*   **🛡️ Sincronização Estabilizada de Nomes:** Sanadas as inconsistências de nomenclatura zootécnica e chamadas assíncronas do motor SQLite, garantindo que o compilador realize a linkagem estrita de tabelas sem travamentos.
+*   **⏱️ Automação de Desmame e Descanso:** Linha cronológica calculada a partir do choco que emite o gatilho automático de desmame aos 35 dias totais (22 dias pós-nascimento), indicando o descanso imediato da matriz.
+*   **⚙️ Ambiente de Produção 100% Limpo e Editável:** Remoção completa de dados simulados ("mock data") de todas as interfaces. O ecossistema inicia completamente limpo; todas as consultas realizam transações dinâmicas de leitura e escrita em tabelas locais físicas do banco de dados SQLite.
 *   
