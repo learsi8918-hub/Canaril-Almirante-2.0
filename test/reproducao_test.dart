@@ -14,7 +14,6 @@ void main() {
         variacao: 'Amarelo Mosaico',
         mutacaoEscrita: '',
         comTopete: false,
-        fotoPath: '',
         numeroGaiola: '15', 
         origemTipo: 'Nascido no Canaril',
         status: 'Descanso',
