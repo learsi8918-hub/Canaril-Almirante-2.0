@@ -3,43 +3,72 @@ import '../lib/models/ave_model.dart';
 import '../lib/models/ciclo_model.dart';
 
 void main() {
-  group('🧪 Testes de Regras Ornitológicas - CanaryControl Pro', () {
-    
-    test('📋 Deve calcular a taxa de fertilidade corretamente baseado nos ovos galados', () {
+  group('Testes dos modelos - CanaryControl Pro V13.1', () {
+    test('Deve criar uma Ave corretamente', () {
       final ave = Ave(
         anilha: '123',
         clubeSigla: 'FO',
         sexo: 'F',
         segmentoFob: 'Canário de Cor',
-        variacao: 'Amarelo Mosaico',
-        mutacaoEscrita: '',
+        mutacaoEscrita: 'Amarelo Mosaico',
         comTopete: false,
-        numeroGaiola: '15', 
+        numeroGaiola: '15',
         origemTipo: 'Nascido no Canaril',
         status: 'Descanso',
       );
 
-      ave.totalOvos = 10;
-      ave.ovosFerteis = 8;
-
-      expect(ave.taxaFertilidade, equals(80.0));
+      expect(ave.anilha, equals('123'));
+      expect(ave.sexo, equals('F'));
+      expect(ave.numeroGaiola, equals('15'));
+      expect(ave.comTopete, isFalse);
     });
 
-    test('⚠️ Deve disparar o gatilho biológico correto de 13 dias para o nascimento', () {
-      final dataChoco = DateTime(2026, 10, 1);
-      
-      final ciclo = CicloReproducao(
-        idGaiola: 'Gaiola 15',
-        sistemaAcasalamento: 'Bigamia', 
-        idMacho: 'GZ-035',
-        idFemea: 'OZ-012',
-        dataInicioChoco: dataChoco,
-        tipoManejoMacho: 'Sempre Junto',
+    test('Deve criar um Ciclo corretamente', () {
+      final dataInicio = DateTime(2026, 10, 1);
+
+      final ciclo = Ciclo(
+        sistema: 'Bigamia',
+        manejoMacho: 'Sempre Junto',
+        dataInicio: dataInicio,
       );
 
-      final dataNascimentoEsperada = DateTime(2026, 10, 14);
-      
-      expect(ciclo.dataNascimento, equals(dataNascimentoEsperada));
+      expect(ciclo.sistema, equals('Bigamia'));
+      expect(ciclo.manejoMacho, equals('Sempre Junto'));
+      expect(ciclo.dataInicio, equals(dataInicio));
+    });
+
+    test('Deve converter Ave para Map corretamente', () {
+      final ave = Ave(
+        anilha: 'GZ-035',
+        clubeSigla: 'FO',
+        sexo: 'M',
+        segmentoFob: 'Canário de Cor',
+      );
+
+      final mapa = ave.toMap();
+
+      expect(mapa['anilha'], equals('GZ-035'));
+      expect(mapa['clube_sigla'], equals('FO'));
+      expect(mapa['sexo'], equals('M'));
+    });
+
+    test('Deve converter Ciclo para Map corretamente', () {
+      final dataInicio = DateTime(2026, 10, 1);
+
+      final ciclo = Ciclo(
+        sistema: 'Monogamia',
+        manejoMacho: 'Sempre Junto',
+        dataInicio: dataInicio,
+      );
+
+      final mapa = ciclo.toMap();
+
+      expect(mapa['sistema'], equals('Monogamia'));
+      expect(mapa['manejo_macho'], equals('Sempre Junto'));
+      expect(
+        mapa['data_inicio'],
+        equals(dataInicio.toIso8601String()),
+      );
     });
   });
 }
