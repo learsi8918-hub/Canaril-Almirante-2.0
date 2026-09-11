@@ -1,45 +1,12 @@
-class CriadorPerfil {
-  int? id;
-  String nome;
-  String siglaClube; // Editável (Ex: SOGO)
-  String logoPath;
-  List<String> racasPrincipais; // Até 4 raças
-  String cidade;
-  String estado;
-
-  CriadorPerfil({
-    this.id,
-    required this.nome,
-    required this.siglaClube,
-    required this.logoPath,
-    required this.racasPrincipais,
-    required this.cidade,
-    required this.estado,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'nome': nome,
-      'siglaClube': siglaClube,
-      'logoPath': logoPath,
-      'racasSelecionadas': racasPrincipais.join(','),
-      'cidade': cidade,
-      'estado': estado,
-    };
-  }
-
-  factory CriadorPerfil.fromMap(Map<String, dynamic> map) {
-    return CriadorPerfil(
-      id: map['id'],
-      nome: map['nome'] ?? '',
-      siglaClube: map['siglaClube'] ?? '',
-      logoPath: map['logoPath'] ?? '',
-      racasPrincipais: map['racasSelecionadas'] != null && map['racasSelecionadas'].toString().isNotEmpty
-          ? map['racasSelecionadas'].toString().split(',')
-          : [],
-      cidade: map['cidade'] ?? '',
-      estado: map['estado'] ?? '',
-    );
-  }
+class Criador {
+  final int? id;
+  final String nome;
+  final String siglaClube;
+  final String? cidade;
+  final String? estado;
+  final String? logoPath;
+  final String? senhaHash;
+  Criador({this.id, required this.nome, required this.siglaClube, this.cidade, this.estado, this.logoPath, this.senhaHash});
+  Map<String,dynamic> toMap()=>{'id':id,'nome':nome,'sigla_clube':siglaClube,'cidade':cidade,'estado':estado,'logo_path':logoPath,'senha_hash':senhaHash};
+  factory Criador.fromMap(Map<String,dynamic> m)=>Criador(id:m['id'] as int?,nome:m['nome']??'',siglaClube:m['sigla_clube']??'',cidade:m['cidade'],estado:m['estado'],logoPath:m['logo_path'],senhaHash:m['senha_hash']);
 }
