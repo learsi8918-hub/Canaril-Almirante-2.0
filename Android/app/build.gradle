@@ -1,0 +1,19 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
+android {
+    namespace 'com.canarycontrolpro.android'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.canarycontrolpro.android'
+        minSdk 23
+        targetSdk 36
+        versionCode 1
+        versionName '14.0.0'
+    }
+}
+
+flutter { source '../..' }
