@@ -1,28 +1,55 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import '../models/ave_model.dart';
-import '../models/criador_model.dart';
+import 'package:crypto/crypto.dart';
+import 'package:csv/csv.dart';
 
-class DbHelper {
-  DbHelper._(); static final instance=DbHelper._(); Database? _db;
-  Future<Database> get db async=>_db??=await _open();
-  Future<Database> _open() async { final p=join(await getDatabasesPath(),'canary_control_pro.db'); return openDatabase(p,version:2,onCreate:_create,onUpgrade:(d,oldV,newV) async {if(oldV<2){await d.execute('ALTER TABLE criador ADD COLUMN senha_hash TEXT');}}); }
-  Future<void> _create(Database d,int v) async {
-    await d.execute('CREATE TABLE criador(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,sigla_clube TEXT NOT NULL,cidade TEXT,estado TEXT,logo_path TEXT,senha_hash TEXT)');
-    await d.execute('CREATE TABLE aves(id INTEGER PRIMARY KEY AUTOINCREMENT,clube_sigla TEXT NOT NULL,anilha TEXT NOT NULL,ano_nascimento TEXT,sexo TEXT NOT NULL,nome TEXT,segmento_fob TEXT,raca TEXT,mutacao TEXT,categoria_plumagem TEXT,mutacao_escrita TEXT,com_topete INTEGER DEFAULT 0,numero_gaiola TEXT,origem_tipo TEXT,status TEXT,pai_id INTEGER,mae_id INTEGER,observacoes TEXT, UNIQUE(clube_sigla,anilha))');
-    await d.execute('CREATE TABLE ciclos(id INTEGER PRIMARY KEY AUTOINCREMENT,sistema TEXT NOT NULL,manejo_macho TEXT,data_inicio TEXT)');
-    await d.execute('CREATE TABLE ciclo_femeas(id INTEGER PRIMARY KEY AUTOINCREMENT,ciclo_id INTEGER NOT NULL,femea_id INTEGER NOT NULL,macho_id INTEGER NOT NULL,gaiola TEXT NOT NULL,data_juntamento TEXT NOT NULL,UNIQUE(ciclo_id,femea_id))');
-    await d.execute('CREATE TABLE posturas(id INTEGER PRIMARY KEY AUTOINCREMENT,ciclo_femea_id INTEGER NOT NULL,numero INTEGER,data_primeiro_ovo TEXT,data_ovoscopia TEXT,data_nascimento_prevista TEXT,data_anilhamento_prevista TEXT,data_desmame_prevista TEXT,observacao TEXT)');
-    await d.execute('CREATE TABLE ovos(id INTEGER PRIMARY KEY AUTOINCREMENT,postura_id INTEGER NOT NULL,femea_id INTEGER NOT NULL,numero INTEGER,data_postura TEXT,resultado_ovoscopia TEXT)');
-    await d.execute('CREATE TABLE filhotes(id INTEGER PRIMARY KEY AUTOINCREMENT,ovo_id INTEGER,pai_id INTEGER,mae_id INTEGER,data_nascimento TEXT,sexo TEXT,clube_sigla TEXT,anilha TEXT,numero_gaiola TEXT,pigmentacao TEXT,data_anilhamento TEXT,data_desmame TEXT,status TEXT,observacoes TEXT)');
-    await d.execute('CREATE TABLE baixas(id INTEGER PRIMARY KEY AUTOINCREMENT,ave_id INTEGER NOT NULL,data TEXT NOT NULL,motivo TEXT NOT NULL,numero_anilha TEXT,clube_sigla TEXT,observacao TEXT)');
-    await d.execute('CREATE TABLE lembretes(id INTEGER PRIMARY KEY AUTOINCREMENT,tipo TEXT,titulo TEXT,data_hora TEXT NOT NULL,ave_id INTEGER,ciclo_id INTEGER,status TEXT DEFAULT "agendado")');
-    await d.execute('CREATE TABLE saude(id INTEGER PRIMARY KEY AUTOINCREMENT,ave_id INTEGER,data_diagnostico TEXT,doenca_sintoma TEXT,tratamento TEXT,duracao_dias INTEGER,status TEXT)');
-    await d.execute('CREATE TABLE retrocruzamentos(id INTEGER PRIMARY KEY AUTOINCREMENT,individuo_id INTEGER NOT NULL,alvo_id INTEGER NOT NULL,geracao INTEGER NOT NULL,observacoes TEXT)');
+class DBHelper {
+  static Database? _db;
+  static Future<Database> get db async => _db ??= await _open();
+  static Future<Database> _open() async {
+    final dir = await getDatabasesPath();
+    return openDatabase(join(dir, 'canary_control_pro_v14.db'), version: 1, onCreate: (db, v) async {
+      await db.execute('CREATE TABLE perfil_criador (id INTEGER PRIMARY KEY, nome_canaril TEXT, nome_criador TEXT, sigla_clube TEXT, clube TEXT, logo_path TEXT, cidade TEXT, estado TEXT, cor_primaria TEXT, cor_secundaria TEXT, cor_fundo TEXT, senha_hash TEXT, senha_salt TEXT)');
+      await db.execute('CREATE TABLE aves (id INTEGER PRIMARY KEY AUTOINCREMENT, anilha TEXT UNIQUE, nome TEXT, gaiola TEXT, sexo TEXT, segmento TEXT, familia TEXT, raca TEXT, variedade TEXT, mutacao TEXT, topete INTEGER DEFAULT 0, origem TEXT, origem_detalhe TEXT, data_nascimento TEXT, foto_path TEXT, observacoes TEXT, status TEXT DEFAULT "ATIVA", pai_id INTEGER, mae_id INTEGER, criado_em TEXT)');
+      await db.execute('CREATE TABLE ciclos (id INTEGER PRIMARY KEY AUTOINCREMENT, gaiola TEXT, sistema TEXT, macho_id INTEGER, femea_id INTEGER, data_uniao TEXT, data_fim TEXT, status TEXT, observacoes TEXT)');
+      await db.execute('CREATE TABLE ovos (id INTEGER PRIMARY KEY AUTOINCREMENT, ciclo_id INTEGER, numero INTEGER, data_postura TEXT, mae_id INTEGER, pai_id INTEGER, ovoscopia_data TEXT, resultado TEXT, observacoes TEXT)');
+      await db.execute('CREATE TABLE filhotes (id INTEGER PRIMARY KEY AUTOINCREMENT, ovo_id INTEGER, anilha TEXT UNIQUE, nome TEXT, data_nascimento TEXT, pigmentacao TEXT, pai_id INTEGER, mae_id INTEGER, gaiola TEXT, status TEXT DEFAULT "ATIVO", observacoes TEXT)');
+      await db.execute('CREATE TABLE historico_saude (id INTEGER PRIMARY KEY AUTOINCREMENT, ave_id INTEGER, inicio TEXT, fim TEXT, doenca TEXT, medicamento TEXT, dosagem TEXT, status TEXT, observacoes TEXT)');
+      await db.execute('CREATE TABLE baixas (id INTEGER PRIMARY KEY AUTOINCREMENT, ave_id INTEGER, data TEXT, motivo TEXT, destino TEXT, observacoes TEXT)');
+      await db.execute('CREATE TABLE lembretes (id INTEGER PRIMARY KEY AUTOINCREMENT, ave_id INTEGER, ciclo_id INTEGER, titulo TEXT, data TEXT, tipo TEXT, concluido INTEGER DEFAULT 0)');
+      await db.execute('CREATE TABLE retrocruzamentos (id INTEGER PRIMARY KEY AUTOINCREMENT, ave_base_id INTEGER, ave_alvo_id INTEGER, geracao INTEGER, objetivo TEXT, observacoes TEXT)');
+      await db.execute('CREATE TABLE catalogo_fob (id INTEGER PRIMARY KEY AUTOINCREMENT, segmento TEXT, familia TEXT, raca TEXT, mutacao TEXT, categoria TEXT, codigo TEXT)');
+      await db.execute('CREATE INDEX idx_aves_status ON aves(status)');
+      await db.execute('CREATE INDEX idx_aves_gaiola ON aves(gaiola)');
+      await db.execute('CREATE INDEX idx_ovos_ciclo ON ovos(ciclo_id)');
+      await db.execute('CREATE INDEX idx_ciclos_femea ON ciclos(femea_id)');
+      await db.execute('CREATE INDEX idx_ciclos_macho ON ciclos(macho_id)');
+      await _seedFob(db);
+    });
   }
-  Future<Criador?> criador() async {final rows=await (await db).query('criador',limit:1);return rows.isEmpty?null:Criador.fromMap(rows.first);}
-  Future<int> salvarCriador(Criador c) async {final d=await db; if(c.id==null)return d.insert('criador',c.toMap()); return d.update('criador',c.toMap(),where:'id=?',whereArgs:[c.id]);}
-  Future<int> upsertAve(Ave a) async {final d=await db; return d.insert('aves',a.toMap(),conflictAlgorithm:ConflictAlgorithm.replace);}
-  Future<List<Ave>> aves() async {final rows=await (await db).query('aves',orderBy:'id DESC');return rows.map(Ave.fromMap).toList();}
-  Future<Map<String,dynamic>> resumo() async {final d=await db; final a=Sqflite.firstIntValue(await d.rawQuery('SELECT COUNT(*) FROM aves'))??0; final ovos=Sqflite.firstIntValue(await d.rawQuery('SELECT COUNT(*) FROM ovos'))??0; final fert=Sqflite.firstIntValue(await d.rawQuery("SELECT COUNT(*) FROM ovos WHERE resultado_ovoscopia='Fértil'"))??0; return {'aves':a,'ovos':ovos,'ferteis':fert,'fertilidade':ovos==0?0:(fert*100/ovos)};}
+  static Future<void> _seedFob(Database db) async {
+    try {
+      final text = await rootBundle.loadString('assets/catalogo_fob.csv');
+      final rows = const CsvToListConverter().convert(text);
+      if (rows.isEmpty) return;
+      final h = rows.first.map((e) => e.toString().trim().toLowerCase()).toList();
+      int ix(String name) => h.indexWhere((e) => e.contains(name));
+      final isx=ix('segmento'), ifam=ix('subgrupo'), ir=ix('raça'), im=ix('mutação'), ic=ix('categoria'), ico=ix('código');
+      final batch = db.batch();
+      for (final row in rows.skip(1)) {
+        String val(int i) => i >= 0 && i < row.length ? row[i].toString().trim() : '';
+        batch.insert('catalogo_fob', {'segmento':val(isx),'familia':val(ifam),'raca':val(ir),'mutacao':val(im),'categoria':val(ic),'codigo':val(ico)});
+      }
+      await batch.commit(noResult: true);
+    } catch (_) {}
+  }
+  static String hashPassword(String password, String salt) {
+    var bytes = utf8.encode('$salt:$password');
+    for (var i=0;i<12000;i++) bytes = sha256.convert(bytes).bytes;
+    return base64UrlEncode(bytes);
+  }
+  static String salt() => List.generate(24, (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2,'0')).join();
 }
