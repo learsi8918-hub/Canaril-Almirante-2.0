@@ -1,130 +1,30 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../database/db_helper.dart';
+import '../models/criador_model.dart';
 import 'navigation_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+String _hash(String s)=>sha256.convert(utf8.encode(s)).toString();
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _senhaController = TextEditingController();
-  bool _senhaOculta = true;
-  bool _carregando = false;
-
-  void _realizarLogin() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _carregando = true;
-      });
-
-      // Simula a validação segura da chave do criador
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _carregando = false;
-        });
-
-        // Navegação limpa substituindo a rota para impedir o criador de voltar ao login usando o botão "voltar" do celular
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const NavigationScreen()),
-        );
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logotipo / Ícone Identificador do Sistema
-                const Icon(
-                  Icons.shield_outlined,
-                  size: 80,
-                  color: Color(0xFFFFD700), // Amarelo Canário Canônico
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "CanaryControl Pro",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const Text(
-                  "Acesso Seguro ao Canaril",
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 32),
-
-                // Campo de E-mail do Criador
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail do Criador',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Por favor, insira seu e-mail';
-                    if (!val.contains('@') || !val.contains('.')) return 'Insira um e-mail válido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Campo de Senha com Controle de Visibilidade
-                TextFormField(
-                  controller: _senhaController,
-                  obscureText: _senhaOculta,
-                  decoration: InputDecoration(
-                    labelText: 'Senha de Segurança',
-                    border: OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(_senhaOculta ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _senhaOculta = !_senhaOculta),
-                    ),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Por favor, insira sua senha';
-                    if (val.length < 6) return 'A senha deve conter pelo menos 6 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Botão de Acionamento com Feedback de Carregamento
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: _carregando ? null : _realizarLogin,
-                    child: _carregando
-                        ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            'Autenticar no Sistema',
-                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class LoginScreen extends StatefulWidget{const LoginScreen({super.key});@override State<LoginScreen> createState()=>_LoginScreenState();}
+class _LoginScreenState extends State<LoginScreen>{
+  Criador? c; final senha=TextEditingController(); final nome=TextEditingController(); final sigla=TextEditingController(); final cidade=TextEditingController(); final estado=TextEditingController(); final novaSenha=TextEditingController(); final confirma=TextEditingController(); String? logo; bool loading=true;
+  @override void initState(){super.initState();_load();}
+  Future<void> _load() async {c=await DbHelper.instance.criador();setState(()=>loading=false);}
+  Future<void> _logo() async {final x=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:85);if(x!=null)setState(()=>logo=x.path);}
+  Future<void> _create() async {if(nome.text.trim().isEmpty||novaSenha.text.length<4||novaSenha.text!=confirma.text){_msg('Preencha o nome e uma senha de pelo menos 4 caracteres.');return;} final n=Criador(nome:nome.text.trim(),siglaClube:sigla.text.trim().toUpperCase(),cidade:cidade.text.trim(),estado:estado.text.trim(),logoPath:logo,senhaHash:_hash(novaSenha.text)); await DbHelper.instance.salvarCriador(n); if(mounted)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const NavigationScreen()));}
+  Future<void> _enter() async {if(c==null)return;if(_hash(senha.text)!=c!.senhaHash){_msg('Senha incorreta.');return;} if(mounted)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const NavigationScreen()));}
+  void _msg(String s)=>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));
+  InputDecoration _dec(String l)=>InputDecoration(labelText:l,border:const OutlineInputBorder());
+  @override Widget build(BuildContext context){if(loading)return const Scaffold(body:Center(child:CircularProgressIndicator())); final first=c==null;
+    return Scaffold(body:SafeArea(child:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(24),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:520),child:Column(children:[
+      if(!first&&c!.logoPath!=null&&File(c!.logoPath!).existsSync())ClipRRect(borderRadius:BorderRadius.circular(24),child:Image.file(File(c!.logoPath!),width:120,height:120,fit:BoxFit.cover)) else const Icon(Icons.flutter_dash,size:80),
+      const SizedBox(height:12), Text(first?'CANARY CONTROL PRO':c!.nome,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),const SizedBox(height:24),
+      if(first)...[
+        TextField(controller:nome,decoration:_dec('Nome do Canaril')),const SizedBox(height:12),TextField(controller:sigla,decoration:_dec('Sigla do Clube FOB (opcional)')),const SizedBox(height:12),TextField(controller:cidade,decoration:_dec('Cidade')),const SizedBox(height:12),TextField(controller:estado,decoration:_dec('Estado')),const SizedBox(height:12),OutlinedButton.icon(onPressed:_logo,icon:const Icon(Icons.image),label:Text(logo==null?'Adicionar logo':'Trocar logo')),const SizedBox(height:12),TextField(controller:novaSenha,obscureText:true,decoration:_dec('Criar senha')),const SizedBox(height:12),TextField(controller:confirma,obscureText:true,decoration:_dec('Confirmar senha')),const SizedBox(height:20),SizedBox(width:double.infinity,child:FilledButton(onPressed:_create,child:const Text('CRIAR MEU CANARIL')))
+      ] else ...[TextField(controller:senha,obscureText:true,decoration:_dec('Senha')),const SizedBox(height:20),SizedBox(width:double.infinity,child:FilledButton(onPressed:_enter,child:const Text('ENTRAR')))]
+    ])))));}
 }
