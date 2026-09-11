@@ -1,21 +1,334 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+
 import '../core/theme_controller.dart';
 import '../database/db_helper.dart';
 import 'navigation_screen.dart';
 
-class LoginScreen extends StatefulWidget { final AppThemeController theme; const LoginScreen({super.key,required this.theme}); @override State<LoginScreen> createState()=>_LoginScreenState(); }
-class _LoginScreenState extends State<LoginScreen>{
-  final house=TextEditingController(), breeder=TextEditingController(), city=TextEditingController(), state=TextEditingController(), club=TextEditingController(), code=TextEditingController(), pass=TextEditingController(); Uint8List? bytes; String? logo;
-  bool loading=true, hasProfile=false, obscure=true;
-  @override void initState(){super.initState(); _load();}
-  Future<void> _load() async { final db=await DBHelper.db; final p=await db.query('perfil_criador',limit:1); if(p.isNotEmpty){hasProfile=true; house.text=p.first['nome_canaril'] as String? ?? ''; breeder.text=p.first['nome_criador'] as String? ?? ''; city.text=p.first['cidade'] as String? ?? ''; state.text=p.first['estado'] as String? ?? ''; club.text=p.first['clube'] as String? ?? 'Nenhum'; code.text=p.first['sigla_clube'] as String? ?? ''; logo=p.first['logo_path'] as String?;} setState(()=>loading=false); }
-  Future<void> pick() async { final x=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:90); if(x==null)return; bytes=await x.readAsBytes(); final d=await getApplicationDocumentsDirectory(); final f=File('${d.path}/logo_canaril.jpg'); await f.writeAsBytes(bytes!); logo=f.path; setState((){}); }
-  Future<void> save() async { if(house.text.trim().isEmpty||breeder.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Informe o nome do canaril e do criador.')));return;} final salt=DBHelper.salt(); final db=await DBHelper.db; await db.insert('perfil_criador',{'id':1,'nome_canaril':house.text.trim(),'nome_criador':breeder.text.trim(),'sigla_clube':code.text.trim().toUpperCase(),'clube':club.text.trim().isEmpty?'Nenhum':club.text.trim(),'logo_path':logo,'cidade':city.text.trim(),'estado':state.text.trim(),'senha_hash':DBHelper.hashPassword(pass.text,salt),'senha_salt':salt},conflictAlgorithm:ConflictAlgorithm.replace); theme.houseName=house.text.trim(); theme.breederName=breeder.text.trim(); theme.city=city.text.trim(); theme.state=state.text.trim(); theme.club=club.text.trim().isEmpty?'Nenhum':club.text.trim(); theme.clubCode=code.text.trim().toUpperCase(); await theme.saveProfile(logo:logo,logoBytes:bytes); if(mounted) Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>NavigationScreen(theme:theme))); }
-  Widget field(String label,TextEditingController c,{bool password=false})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,obscureText:password&&obscure,decoration:InputDecoration(labelText:label,suffixIcon:password?IconButton(onPressed:()=>setState(()=>obscure=!obscure),icon:Icon(obscure?Icons.visibility:Icons.visibility_off)):null)));
-  @override Widget build(BuildContext context){if(loading)return const Scaffold(body:Center(child:CircularProgressIndicator())); return Scaffold(body:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(22),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:520),child:Card(child:Padding(padding:const EdgeInsets.all(22),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Text('CANARY CONTROL PRO',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),const SizedBox(height:6),Text(hasProfile?'Acesse e edite o cadastro do seu canaril.':'Configure seu canaril para personalizar todo o aplicativo.'),const SizedBox(height:20),Center(child:GestureDetector(onTap:pick,child:CircleAvatar(radius:52,backgroundImage:logo!=null?FileImage(File(logo!)):null,child:logo==null?const Icon(Icons.add_a_photo,size:34):null))),const SizedBox(height:8),TextButton.icon(onPressed:pick,icon:const Icon(Icons.palette),label:const Text('Adicionar / trocar logo')),
- field('Nome do canaril',house),field('Nome do criador',breeder),field('Cidade',city),field('Estado',state),field('Clube (ou Nenhum)',club),field('Sigla do clube — 2 letras',code),field('Senha de acesso',pass,password:true),const SizedBox(height:8),FilledButton.icon(onPressed:save,icon:const Icon(Icons.check),label:Text(hasProfile?'Salvar e entrar':'Criar perfil e entrar')),const SizedBox(height:8),Text('As cores da interface serão extraídas automaticamente da logo.',textAlign:TextAlign.center,style:Theme.of(context).textTheme.bodySmall)]))))));}
+class LoginScreen extends StatefulWidget {
+  final AppThemeController theme;
+
+  const LoginScreen({
+    super.key,
+    required this.theme,
+  });
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final house = TextEditingController();
+  final breeder = TextEditingController();
+  final city = TextEditingController();
+  final state = TextEditingController();
+  final club = TextEditingController();
+  final code = TextEditingController();
+  final pass = TextEditingController();
+
+  Uint8List? bytes;
+  String? logo;
+
+  bool loading = true;
+  bool hasProfile = false;
+  bool obscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final db = await DBHelper.db;
+
+    final p = await db.query(
+      'perfil_criador',
+      limit: 1,
+    );
+
+    if (p.isNotEmpty) {
+      hasProfile = true;
+
+      house.text = p.first['nome_canaril'] as String? ?? '';
+      breeder.text = p.first['nome_criador'] as String? ?? '';
+      city.text = p.first['cidade'] as String? ?? '';
+      state.text = p.first['estado'] as String? ?? '';
+      club.text = p.first['clube'] as String? ?? 'Nenhum';
+      code.text = p.first['sigla_clube'] as String? ?? '';
+      logo = p.first['logo_path'] as String?;
+    }
+
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  Future<void> pick() async {
+    final x = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+    );
+
+    if (x == null) return;
+
+    bytes = await x.readAsBytes();
+
+    final d = await getApplicationDocumentsDirectory();
+
+    final f = File('${d.path}/logo_canaril.jpg');
+
+    await f.writeAsBytes(bytes!);
+
+    logo = f.path;
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> save() async {
+    if (house.text.trim().isEmpty ||
+        breeder.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe o nome do canaril e do criador.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final salt = DBHelper.salt();
+    final db = await DBHelper.db;
+
+    await db.insert(
+      'perfil_criador',
+      {
+        'id': 1,
+        'nome_canaril': house.text.trim(),
+        'nome_criador': breeder.text.trim(),
+        'sigla_clube': code.text.trim().toUpperCase(),
+        'clube': club.text.trim().isEmpty
+            ? 'Nenhum'
+            : club.text.trim(),
+        'logo_path': logo,
+        'cidade': city.text.trim(),
+        'estado': state.text.trim(),
+        'senha_hash': DBHelper.hashPassword(
+          pass.text,
+          salt,
+        ),
+        'senha_salt': salt,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    widget.theme.houseName = house.text.trim();
+    widget.theme.breederName = breeder.text.trim();
+    widget.theme.city = city.text.trim();
+    widget.theme.state = state.text.trim();
+
+    widget.theme.club = club.text.trim().isEmpty
+        ? 'Nenhum'
+        : club.text.trim();
+
+    widget.theme.clubCode =
+        code.text.trim().toUpperCase();
+
+    await widget.theme.saveProfile(
+      logo: logo,
+      logoBytes: bytes,
+    );
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => NavigationScreen(
+            theme: widget.theme,
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget field(
+    String label,
+    TextEditingController controller, {
+    bool password = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        obscureText: password && obscure,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: password
+              ? IconButton(
+                  onPressed: () {
+                    setState(() {
+                      obscure = !obscure;
+                    });
+                  },
+                  icon: Icon(
+                    obscure
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(22),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 520,
+            ),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'CANARY CONTROL PRO',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      hasProfile
+                          ? 'Acesse e edite o cadastro do seu canaril.'
+                          : 'Configure seu canaril para personalizar todo o aplicativo.',
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Center(
+                      child: GestureDetector(
+                        onTap: pick,
+                        child: CircleAvatar(
+                          radius: 52,
+                          backgroundImage: logo != null
+                              ? FileImage(File(logo!))
+                              : null,
+                          child: logo == null
+                              ? const Icon(
+                                  Icons.add_a_photo,
+                                  size: 34,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    TextButton.icon(
+                      onPressed: pick,
+                      icon: const Icon(Icons.palette),
+                      label: const Text(
+                        'Adicionar / trocar logo',
+                      ),
+                    ),
+
+                    field(
+                      'Nome do canaril',
+                      house,
+                    ),
+
+                    field(
+                      'Nome do criador',
+                      breeder,
+                    ),
+
+                    field(
+                      'Cidade',
+                      city,
+                    ),
+
+                    field(
+                      'Estado',
+                      state,
+                    ),
+
+                    field(
+                      'Clube (ou Nenhum)',
+                      club,
+                    ),
+
+                    field(
+                      'Sigla do clube — 2 letras',
+                      code,
+                    ),
+
+                    field(
+                      'Senha de acesso',
+                      pass,
+                      password: true,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    FilledButton.icon(
+                      onPressed: save,
+                      icon: const Icon(Icons.check),
+                      label: Text(
+                        hasProfile
+                            ? 'Salvar e entrar'
+                            : 'Criar perfil e entrar',
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      'As cores da interface serão extraídas automaticamente da logo.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
