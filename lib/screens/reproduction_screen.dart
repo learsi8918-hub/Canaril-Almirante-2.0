@@ -1,118 +1,755 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 import '../core/theme_controller.dart';
 import '../database/db_helper.dart';
-import '../services/notification_service.dart';
 
 class ReproductionScreen extends StatefulWidget {
   final AppThemeController theme;
-  const ReproductionScreen({super.key, required this.theme});
-  @override State<ReproductionScreen> createState() => _ReproState();
+
+  const ReproductionScreen({
+    super.key,
+    required this.theme,
+  });
+
+  @override
+  State<ReproductionScreen> createState() => _ReproductionScreenState();
 }
 
-class _ReproState extends State<ReproductionScreen> {
-  List<Map<String, Object?>> cycles = [];
+class _ReproductionScreenState extends State<ReproductionScreen> {
+  List<Map<String, dynamic>> cycles = [];
+  bool loading = true;
 
-  @override void initState() { super.initState(); load(); }
-
-  Future<void> load() async {
-    final d = await DBHelper.db;
-    cycles = await d.rawQuery('SELECT c.*, m.anilha ma, f.anilha fa FROM ciclos c LEFT JOIN aves m ON m.id=c.macho_id LEFT JOIN aves f ON f.id=c.femea_id ORDER BY c.id DESC');
-    if (mounted) setState(() {});
+  @override
+  void initState() {
+    super.initState();
+    _prepareDatabase();
   }
 
-  Future<DateTime?> pickDate(DateTime initial) => showDatePicker(
-    context: context, firstDate: DateTime(2020), lastDate: DateTime(2100), initialDate: initial,
-  );
+  Future<void> _prepareDatabase() async {
+    final db = await DBHelper.db;
 
-  Future<void> newCycle() async {
-    final d = await DBHelper.db;
-    final birds = await d.query('aves', where: 'status=?', whereArgs: ['ATIVA']);
-    final males = birds.where((x) => x['sexo'] == 'Macho').toList();
-    final females = birds.where((x) => x['sexo'] == 'Fêmea').toList();
+    await _addColumnIfMissing(
+      db,
+      'ciclos',
+      'data_primeiro_ovo',
+      'TEXT',
+    );
+
+    await _addColumnIfMissing(
+      db,
+      'ciclos',
+      'data_inicio_choco',
+      'TEXT',
+    );
+
+    await _addColumnIfMissing(
+      db,
+      'ciclos',
+      'nascimento_previsto',
+      'TEXT',
+    );
+
+    await _addColumnIfMissing(
+      db,
+      'ciclos',
+      'anilhamento_previsto',
+      'TEXT',
+    );
+
+    await _addColumnIfMissing(
+      db,
+      'ciclos',
+      'desmame_previsto',
+      'TEXT',
+    );
+
+    await _loadCycles();
+  }
+
+  Future<void> _addColumnIfMissing(
+    dynamic db,
+    String table,
+    String column,
+    String type,
+  ) async {
+    final result = await db.rawQuery(
+      'PRAGMA table_info($table)',
+    );
+
+    final exists = result.any(
+      (row) => row['name'] == column,
+    );
+
+    if (!exists) {
+      await db.execute(
+        'ALTER TABLE $table ADD COLUMN $column $type',
+      );
+    }
+  }
+
+  Future<void> _loadCycles() async {
+    if (!mounted) return;
+
+    setState(() {
+      loading = true;
+    });
+
+    final db = await DBHelper.db;
+
+    final result = await db.rawQuery('''
+      SELECT
+        c.*,
+        m.anilha AS macho_anilha,
+        m.nome AS macho_nome,
+        f.anilha AS femea_anilha,
+        f.nome AS femea_nome
+      FROM ciclos c
+      LEFT JOIN aves m ON m.id = c.macho_id
+      LEFT JOIN aves f ON f.id = c.femea_id
+      ORDER BY
+        CASE
+          WHEN c.status = 'ABERTO' THEN 0
+          ELSE 1
+        END,
+        c.data_uniao DESC
+    ''');
+
+    if (!mounted) return;
+
+    setState(() {
+      cycles = result;
+      loading = false;
+    });
+  }
+
+  DateTime? _date(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '--/--/----';
+
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
+  String _formatDateString(dynamic value) {
+    if (value == null) return '--/--/----';
+
+    return _formatDate(
+      _date(value.toString()),
+    );
+  }
+
+  DateTime _onlyDate(DateTime date) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+    );
+  }
+
+  Future<void> _newCycle() async {
+    final db = await DBHelper.db;
+
+    final males = await db.query(
+      'aves',
+      where: 'sexo = ? AND status = ?',
+      whereArgs: ['Macho', 'ATIVA'],
+      orderBy: 'anilha ASC',
+    );
+
+    final females = await db.query(
+      'aves',
+      where: 'sexo = ? AND status = ?',
+      whereArgs: ['Fêmea', 'ATIVA'],
+      orderBy: 'anilha ASC',
+    );
+
+    if (!mounted) return;
+
     if (males.isEmpty || females.isEmpty) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cadastre pelo menos um macho e uma fêmea ativa.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cadastre pelo menos um macho e uma fêmea ativa antes de criar um ciclo.',
+          ),
+        ),
+      );
       return;
     }
-    int? male = males.first['id'] as int;
-    int? female = females.first['id'] as int;
-    String system = 'Monogamia';
-    final cage = TextEditingController();
-    DateTime date = DateTime.now();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialog) => AlertDialog(
-          title: const Text('Novo ciclo reprodutivo'),
-          content: SizedBox(width: 500, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            DropdownButtonFormField<String>(value: system, items: ['Monogamia','Bigamia','Poligamia'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(), onChanged: (v) { if (v != null) setDialog(() => system = v); }, decoration: const InputDecoration(labelText: 'Sistema')),
-            DropdownButtonFormField<int>(value: male, items: males.map((x) => DropdownMenuItem(value: x['id'] as int, child: Text('${x['anilha']} ${x['nome'] ?? ''}'))).toList(), onChanged: (v) => setDialog(() => male = v), decoration: const InputDecoration(labelText: 'Macho')),
-            DropdownButtonFormField<int>(value: female, items: females.map((x) => DropdownMenuItem(value: x['id'] as int, child: Text('${x['anilha']} ${x['nome'] ?? ''}'))).toList(), onChanged: (v) => setDialog(() => female = v), decoration: const InputDecoration(labelText: 'Fêmea')),
-            TextField(controller: cage, decoration: const InputDecoration(labelText: 'Gaiola')),
-            ListTile(title: Text('Data de união: ${DateFormat('dd/MM/yyyy').format(date)}'), trailing: const Icon(Icons.calendar_month), onTap: () async { final x = await pickDate(date); if (x != null) setDialog(() => date = x); }),
-          ]))),
-          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Criar ciclo'))],
-        ),
-      ),
-    );
-    if (ok != true || male == null || female == null) return;
-    final id = await d.insert('ciclos', {'gaiola': cage.text.trim(), 'sistema': system, 'macho_id': male, 'femea_id': female, 'data_uniao': date.toIso8601String(), 'status': 'ATIVO'});
-    await _schedule(id, date);
-    await load();
-  }
 
-  Future<void> _schedule(int cycleId, DateTime firstEgg) async {
-    final dates = [
-      ('Ovoscopia', firstEgg.add(const Duration(days: 6))),
-      ('Nascimento previsto', firstEgg.add(const Duration(days: 14))),
-      ('Anilhamento', firstEgg.add(const Duration(days: 19))),
-      ('Desmame', firstEgg.add(const Duration(days: 46))),
-    ];
-    final d = await DBHelper.db;
-    for (final x in dates) {
-      final lid = await d.insert('lembretes', {'ciclo_id': cycleId, 'titulo': x.$1, 'data': x.$2.toIso8601String(), 'tipo': x.$1});
-      await NotificationService.instance.schedule(lid, x.$1, 'Canary Control Pro — ciclo reprodutivo', x.$2);
+    int? maleId = males.first['id'] as int?;
+    int? femaleId = females.first['id'] as int?;
+
+    String system = 'Monogamia';
+    String cage = '';
+
+    DateTime unionDate = _onlyDate(DateTime.now());
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Novo ciclo reprodutivo'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: system,
+                      decoration: const InputDecoration(
+                        labelText: 'Sistema reprodutivo',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Monogamia',
+                          child: Text('Monogamia'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Bigamia',
+                          child: Text('Bigamia'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Poligamia',
+                          child: Text('Poligamia'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+
+                        setDialogState(() {
+                          system = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    DropdownButtonFormField<int>(
+                      value: maleId,
+                      decoration: const InputDecoration(
+                        labelText: 'Macho',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: males.map((bird) {
+                        final id = bird['id'] as int;
+
+                        final ring =
+                            (bird['anilha'] ?? '').toString();
+
+                        final name =
+                            (bird['nome'] ?? '').toString();
+
+                        return DropdownMenuItem<int>(
+                          value: id,
+                          child: Text(
+                            name.isEmpty
+                                ? ring
+                                : '$ring · $name',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          maleId = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    DropdownButtonFormField<int>(
+                      value: femaleId,
+                      decoration: const InputDecoration(
+                        labelText: 'Fêmea',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: females.map((bird) {
+                        final id = bird['id'] as int;
+
+                        final ring =
+                            (bird['anilha'] ?? '').toString();
+
+                        final name =
+                            (bird['nome'] ?? '').toString();
+
+                        return DropdownMenuItem<int>(
+                          value: id,
+                          child: Text(
+                            name.isEmpty
+                                ? ring
+                                : '$ring · $name',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          femaleId = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Gaiola',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        cage = value.trim();
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.event,
+                        color: widget.theme.primary,
+                      ),
+                      title: const Text('Data da união'),
+                      subtitle: Text(
+                        _formatDate(unionDate),
+                      ),
+                      onTap: () async {
+                        final selected =
+                            await showDatePicker(
+                          context: context,
+                          initialDate: unionDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+
+                        if (selected != null) {
+                          setDialogState(() {
+                            unionDate = _onlyDate(selected);
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext, false);
+                  },
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: maleId == null || femaleId == null
+                      ? null
+                      : () async {
+                          await db.insert(
+                            'ciclos',
+                            {
+                              'gaiola': cage,
+                              'sistema': system,
+                              'macho_id': maleId,
+                              'femea_id': femaleId,
+                              'data_uniao':
+                                  unionDate.toIso8601String(),
+                              'status': 'ABERTO',
+                            },
+                          );
+
+                          if (dialogContext.mounted) {
+                            Navigator.pop(
+                              dialogContext,
+                              true,
+                            );
+                          }
+                        },
+                  child: const Text('Criar ciclo'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (saved == true) {
+      await _loadCycles();
     }
   }
 
-  Future<void> addEgg(Map<String, Object?> cycle) async {
-    final n = TextEditingController();
-    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-      title: const Text('Registrar ovo'), content: TextField(controller: n, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Número do ovo')),
-      actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Salvar'))],
-    ));
-    if (ok != true) return;
-    final d = await DBHelper.db;
-    final count = Sqflite.firstIntValue(await d.rawQuery('SELECT COUNT(*) FROM ovos WHERE ciclo_id=?', [cycle['id']])) ?? 0;
-    final dt = DateTime.now();
-    await d.insert('ovos', {'ciclo_id': cycle['id'], 'numero': int.tryParse(n.text) ?? count + 1, 'data_postura': dt.toIso8601String(), 'mae_id': cycle['femea_id'], 'pai_id': cycle['macho_id'], 'ovoscopia_data': dt.add(const Duration(days: 6)).toIso8601String()});
-    await load();
+  Future<void> _registerFirstEgg(
+    Map<String, dynamic> cycle,
+  ) async {
+    final cycleId = cycle['id'] as int;
+
+    DateTime date =
+        _date(cycle['data_primeiro_ovo']?.toString()) ??
+            _onlyDate(DateTime.now());
+
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (selected == null) return;
+
+    final db = await DBHelper.db;
+
+    await db.update(
+      'ciclos',
+      {
+        'data_primeiro_ovo':
+            _onlyDate(selected).toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [cycleId],
+    );
+
+    await _loadCycles();
   }
 
-  @override Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reprodução')),
-      floatingActionButton: FloatingActionButton.extended(onPressed: newCycle, icon: const Icon(Icons.add), label: const Text('Novo ciclo')),
-      body: ListView(padding: const EdgeInsets.all(12), children: [
-        Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Reprodução profissional', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          const Text('Cada ciclo liga macho, fêmea, gaiola e data. Bigamia/poligamia podem usar o mesmo macho em ciclos independentes.'),
-        ]))),
-        const SizedBox(height: 12),
-        ...cycles.map((r) => Card(child: ExpansionTile(
-          title: Text('Gaiola ${r['gaiola'] ?? '-'} · ${r['sistema'] ?? '-'}'),
-          subtitle: Text('♂ ${r['ma'] ?? '-'}  ×  ♀ ${r['fa'] ?? '-'}'),
-          children: [
-            ListTile(title: const Text('Data de união'), subtitle: Text(_date(r['data_uniao']))),
-            ListTile(title: const Text('Status'), subtitle: Text(r['status'] as String? ?? '-')),
-            TextButton.icon(onPressed: () => addEgg(r), icon: const Icon(Icons.egg), label: const Text('Registrar ovo')),
+  Future<void> _registerBrooding(
+    Map<String, dynamic> cycle,
+  ) async {
+    final cycleId = cycle['id'] as int;
+
+    DateTime date =
+        _date(cycle['data_inicio_choco']?.toString()) ??
+            _onlyDate(DateTime.now());
+
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (selected == null) return;
+
+    final choco = _onlyDate(selected);
+
+    final ovoscopy = choco.add(
+      const Duration(days: 6),
+    );
+
+    final birthMin = choco.add(
+      const Duration(days: 13),
+    );
+
+    final birthMax = choco.add(
+      const Duration(days: 15),
+    );
+
+    final banding = birthMin.add(
+      const Duration(days: 5),
+    );
+
+    final weaningMin = birthMin.add(
+      const Duration(days: 30),
+    );
+
+    final weaningMax = birthMax.add(
+      const Duration(days: 35),
+    );
+
+    final db = await DBHelper.db;
+
+    await db.update(
+      'ciclos',
+      {
+        'data_inicio_choco': choco.toIso8601String(),
+        'nascimento_previsto':
+            birthMin.toIso8601String(),
+        'anilhamento_previsto':
+            banding.toIso8601String(),
+        'desmame_previsto':
+            weaningMin.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [cycleId],
+    );
+
+    /*
+      A sequência correta é:
+
+      UNIÃO
+        ↓
+      PRIMEIRO OVO
+        ↓
+      INÍCIO DO CHOCO
+        ↓
+      + 6 dias
+      OVOSCOPIA
+        ↓
+      + 13 a 15 dias
+      NASCIMENTO
+        ↓
+      + 5 dias
+      ANILHAMENTO
+        ↓
+      + 30 a 35 dias
+      DESMAME
+    */
+
+    await _loadCycles();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('Cronograma calculado'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _dateLine(
+                'Início do choco',
+                choco,
+              ),
+              _dateLine(
+                'Ovoscopia',
+                ovoscopy,
+              ),
+              _dateLine(
+                'Nascimento',
+                birthMin,
+                suffix: ' a ${_formatDate(birthMax)}',
+              ),
+              _dateLine(
+                'Anilhamento',
+                banding,
+              ),
+              _dateLine(
+                'Desmame',
+                weaningMin,
+                suffix:
+                    ' a ${_formatDate(weaningMax)}',
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
           ],
-        )))
-      ]),
+        );
+      },
     );
   }
 
-  String _date(Object? v) { if (v == null) return '-'; return DateFormat('dd/MM/yyyy').format(DateTime.tryParse(v.toString()) ?? DateTime.now()); }
-}
+  Widget _dateLine(
+    String title,
+    DateTime date, {
+    String suffix = '',
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle,
+            size: 20,
+            color: widget.theme.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$title: ${_formatDate(date)}$suffix',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addEgg(
+    Map<String, dynamic> cycle,
+  ) async {
+    final cycleId = cycle['id'] as int;
+
+    final db = await DBHelper.db;
+
+    final result = await db.rawQuery(
+      '''
+      SELECT MAX(numero) AS maior
+      FROM ovos
+      WHERE ciclo_id = ?
+      ''',
+      [cycleId],
+    );
+
+    int nextNumber = 1;
+
+    if (result.isNotEmpty &&
+        result.first['maior'] != null) {
+      nextNumber =
+          ((result.first['maior'] as num).toInt()) + 1;
+    }
+
+    DateTime date = _onlyDate(DateTime.now());
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text('Registrar ovo $nextNumber'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Ovo $nextNumber',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      Icons.calendar_month,
+                      color: widget.theme.primary,
+                    ),
+                    title: const Text('Data da postura'),
+                    subtitle: Text(
+                      _formatDate(date),
+                    ),
+                    onTap: () async {
+                      final selected =
+                          await showDatePicker(
+                        context: context,
+                        initialDate: date,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+
+                      if (selected != null) {
+                        setStateDialog(() {
+                          date = _onlyDate(selected);
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(
+                      dialogContext,
+                      false,
+                    );
+                  },
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    await db.insert(
+                      'ovos',
+                      {
+                        'ciclo_id': cycleId,
+                        'numero': nextNumber,
+                        'data_postura':
+                            date.toIso8601String(),
+                        'mae_id': cycle['femea_id'],
+                        'pai_id': cycle['macho_id'],
+                        'resultado': 'Aguardando',
+                      },
+                    );
+
+                    if (dialogContext.mounted) {
+                      Navigator.pop(
+                        dialogContext,
+                        true,
+                      );
+                    }
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (saved == true) {
+      await _loadCycles();
+    }
+  }
+
+  Future<void> _ovoscopy(
+    Map<String, dynamic> cycle,
+  ) async {
+    final cycleId = cycle['id'] as int;
+
+    final db = await DBHelper.db;
+
+    final eggs = await db.query(
+      'ovos',
+      where: 'ciclo_id = ?',
+      whereArgs: [cycleId],
+      orderBy: 'numero ASC',
+    );
+
+    if (!mounted) return;
+
+    if (eggs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Registre pelo menos um ovo antes da ovoscopia.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final choco = _date(
+      cycle['data_inicio_choco']?.toString(),
+    );
+
+    DateTime date = choco != null
+        ? choco.add(const Duration(days: 6))
+        : _onlyDate(DateTime.now());
+
+    final results = <int, String>{};
+
+    for (final egg in eggs) {
+      results[egg['id'] as int] =
+          (egg['resultado'] ?? 'Aguardando').toString();
+    }
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Ovoscopia'),
+              content: SizedBox(
+                width: 430,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.calendar_month,
+                          color: widget.theme.primary,
+                        ),
+                        title
