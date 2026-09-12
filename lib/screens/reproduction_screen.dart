@@ -21,81 +21,45 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
   @override
   void initState() {
     super.initState();
-    _prepareDatabase();
+    _initialize();
   }
 
-  Future<void> _prepareDatabase() async {
+  Future<void> _initialize() async {
     final db = await DBHelper.db;
 
-    await _addColumnIfMissing(
-      db,
-      'ciclos',
-      'data_primeiro_ovo',
-      'TEXT',
-    );
+    await _addColumn(db, 'data_primeiro_ovo');
+    await _addColumn(db, 'data_inicio_choco');
+    await _addColumn(db, 'nascimento_previsto');
+    await _addColumn(db, 'anilhamento_previsto');
+    await _addColumn(db, 'desmame_previsto');
 
-    await _addColumnIfMissing(
-      db,
-      'ciclos',
-      'data_inicio_choco',
-      'TEXT',
-    );
-
-    await _addColumnIfMissing(
-      db,
-      'ciclos',
-      'nascimento_previsto',
-      'TEXT',
-    );
-
-    await _addColumnIfMissing(
-      db,
-      'ciclos',
-      'anilhamento_previsto',
-      'TEXT',
-    );
-
-    await _addColumnIfMissing(
-      db,
-      'ciclos',
-      'desmame_previsto',
-      'TEXT',
-    );
-
-    await _loadCycles();
+    await _load();
   }
 
-  Future<void> _addColumnIfMissing(
-    dynamic db,
-    String table,
-    String column,
-    String type,
-  ) async {
-    final result = await db.rawQuery(
-      'PRAGMA table_info($table)',
-    );
+  Future<void> _addColumn(dynamic db, String column) async {
+    final info = await db.rawQuery('PRAGMA table_info(ciclos)');
 
-    final exists = result.any(
+    final exists = info.any(
       (row) => row['name'] == column,
     );
 
     if (!exists) {
       await db.execute(
-        'ALTER TABLE $table ADD COLUMN $column $type',
+        'ALTER TABLE ciclos ADD COLUMN $column TEXT',
       );
     }
   }
 
-  Future<void> _loadCycles() async {
-    if (!mounted) return;
-
-    setState(() {
-      loading = true;
-    });
+  Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        loading = true;
+      });
+    }
 
     final db = await DBHelper.db;
 
-    final result = await db.rawQuery('''
+    final data = await db.rawQuery('''
       SELECT
         c.*,
         m.anilha AS macho_anilha,
@@ -105,48 +69,42 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       FROM ciclos c
       LEFT JOIN aves m ON m.id = c.macho_id
       LEFT JOIN aves f ON f.id = c.femea_id
-      ORDER BY
-        CASE
-          WHEN c.status = 'ABERTO' THEN 0
-          ELSE 1
-        END,
-        c.data_uniao DESC
+      ORDER BY c.id DESC
     ''');
 
     if (!mounted) return;
 
     setState(() {
-      cycles = result;
+      cycles = data;
       loading = false;
     });
   }
 
-  DateTime? _date(String? value) {
-    if (value == null || value.isEmpty) return null;
-    return DateTime.tryParse(value);
+  DateTime? _parse(dynamic value) {
+    if (value == null) return null;
+    if (value.toString().isEmpty) return null;
+    return DateTime.tryParse(value.toString());
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return '--/--/----';
+  String _date(dynamic value) {
+    final date = _parse(value);
+
+    if (date == null) {
+      return '--/--/----';
+    }
 
     return '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/'
         '${date.year}';
   }
 
-  String _formatDateString(dynamic value) {
-    if (value == null) return '--/--/----';
+  DateTime _today() {
+    final now = DateTime.now();
 
-    return _formatDate(
-      _date(value.toString()),
-    );
-  }
-
-  DateTime _onlyDate(DateTime date) {
     return DateTime(
-      date.year,
-      date.month,
-      date.day,
+      now.year,
+      now.month,
+      now.day,
     );
   }
 
@@ -173,7 +131,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Cadastre pelo menos um macho e uma fêmea ativa antes de criar um ciclo.',
+            'É necessário ter pelo menos um macho e uma fêmea ativos.',
           ),
         ),
       );
@@ -185,10 +143,9 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
     String system = 'Monogamia';
     String cage = '';
+    DateTime unionDate = _today();
 
-    DateTime unionDate = _onlyDate(DateTime.now());
-
-    final saved = await showDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -202,7 +159,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                     DropdownButtonFormField<String>(
                       value: system,
                       decoration: const InputDecoration(
-                        labelText: 'Sistema reprodutivo',
+                        labelText: 'Sistema',
                         border: OutlineInputBorder(),
                       ),
                       items: const [
@@ -227,8 +184,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 14),
-
+                    const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
                       value: maleId,
                       decoration: const InputDecoration(
@@ -237,10 +193,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                       ),
                       items: males.map((bird) {
                         final id = bird['id'] as int;
-
                         final ring =
                             (bird['anilha'] ?? '').toString();
-
                         final name =
                             (bird['nome'] ?? '').toString();
 
@@ -259,8 +213,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 14),
-
+                    const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
                       value: femaleId,
                       decoration: const InputDecoration(
@@ -269,10 +222,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                       ),
                       items: females.map((bird) {
                         final id = bird['id'] as int;
-
                         final ring =
                             (bird['anilha'] ?? '').toString();
-
                         final name =
                             (bird['nome'] ?? '').toString();
 
@@ -291,8 +242,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 14),
-
+                    const SizedBox(height: 12),
                     TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Gaiola',
@@ -302,12 +252,11 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                         cage = value.trim();
                       },
                     ),
-                    const SizedBox(height: 14),
-
+                    const SizedBox(height: 12),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(
-                        Icons.event,
+                        Icons.calendar_month,
                         color: widget.theme.primary,
                       ),
                       title: const Text('Data da união'),
@@ -325,7 +274,11 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
                         if (selected != null) {
                           setDialogState(() {
-                            unionDate = _onlyDate(selected);
+                            unionDate = DateTime(
+                              selected.year,
+                              selected.month,
+                              selected.day,
+                            );
                           });
                         }
                       },
@@ -373,19 +326,23 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       },
     );
 
-    if (saved == true) {
-      await _loadCycles();
+    if (result == true) {
+      await _load();
     }
   }
 
-  Future<void> _registerFirstEgg(
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
+  Future<void> _firstEgg(
     Map<String, dynamic> cycle,
   ) async {
-    final cycleId = cycle['id'] as int;
-
     DateTime date =
-        _date(cycle['data_primeiro_ovo']?.toString()) ??
-            _onlyDate(DateTime.now());
+        _parse(cycle['data_primeiro_ovo']) ??
+            _today();
 
     final selected = await showDatePicker(
       context: context,
@@ -395,6 +352,12 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
     );
 
     if (selected == null) return;
+
+    date = DateTime(
+      selected.year,
+      selected.month,
+      selected.day,
+    );
 
     final db = await DBHelper.db;
 
@@ -402,23 +365,21 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       'ciclos',
       {
         'data_primeiro_ovo':
-            _onlyDate(selected).toIso8601String(),
+            date.toIso8601String(),
       },
       where: 'id = ?',
-      whereArgs: [cycleId],
+      whereArgs: [cycle['id']],
     );
 
-    await _loadCycles();
+    await _load();
   }
 
-  Future<void> _registerBrooding(
+  Future<void> _startBrooding(
     Map<String, dynamic> cycle,
   ) async {
-    final cycleId = cycle['id'] as int;
-
     DateTime date =
-        _date(cycle['data_inicio_choco']?.toString()) ??
-            _onlyDate(DateTime.now());
+        _parse(cycle['data_inicio_choco']) ??
+            _today();
 
     final selected = await showDatePicker(
       context: context,
@@ -429,7 +390,11 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
     if (selected == null) return;
 
-    final choco = _onlyDate(selected);
+    final choco = DateTime(
+      selected.year,
+      selected.month,
+      selected.day,
+    );
 
     final ovoscopy = choco.add(
       const Duration(days: 6),
@@ -451,16 +416,13 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       const Duration(days: 30),
     );
 
-    final weaningMax = birthMax.add(
-      const Duration(days: 35),
-    );
-
     final db = await DBHelper.db;
 
     await db.update(
       'ciclos',
       {
-        'data_inicio_choco': choco.toIso8601String(),
+        'data_inicio_choco':
+            choco.toIso8601String(),
         'nascimento_previsto':
             birthMin.toIso8601String(),
         'anilhamento_previsto':
@@ -469,66 +431,43 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
             weaningMin.toIso8601String(),
       },
       where: 'id = ?',
-      whereArgs: [cycleId],
+      whereArgs: [cycle['id']],
     );
 
-    /*
-      A sequência correta é:
-
-      UNIÃO
-        ↓
-      PRIMEIRO OVO
-        ↓
-      INÍCIO DO CHOCO
-        ↓
-      + 6 dias
-      OVOSCOPIA
-        ↓
-      + 13 a 15 dias
-      NASCIMENTO
-        ↓
-      + 5 dias
-      ANILHAMENTO
-        ↓
-      + 30 a 35 dias
-      DESMAME
-    */
-
-    await _loadCycles();
+    await _load();
 
     if (!mounted) return;
 
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (_) {
+      builder: (context) {
         return AlertDialog(
-          title: const Text('Cronograma calculado'),
+          title: const Text('Cronograma reprodutivo'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              _dateLine(
+              _resultLine(
                 'Início do choco',
-                choco,
+                _formatDate(choco),
               ),
-              _dateLine(
+              _resultLine(
                 'Ovoscopia',
-                ovoscopy,
+                _formatDate(ovoscopy),
               ),
-              _dateLine(
-                'Nascimento',
-                birthMin,
-                suffix: ' a ${_formatDate(birthMax)}',
+              _resultLine(
+                'Nascimento previsto',
+                '${_formatDate(birthMin)} a ${_formatDate(birthMax)}',
               ),
-              _dateLine(
+              _resultLine(
                 'Anilhamento',
-                banding,
+                _formatDate(banding),
               ),
-              _dateLine(
+              _resultLine(
                 'Desmame',
-                weaningMin,
-                suffix:
-                    ' a ${_formatDate(weaningMax)}',
+                '${_formatDate(weaningMin)} a '
+                    '${_formatDate(birthMax.add(const Duration(days: 35)))}',
               ),
             ],
           ),
@@ -545,25 +484,25 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
     );
   }
 
-  Widget _dateLine(
+  Widget _resultLine(
     String title,
-    DateTime date, {
-    String suffix = '',
-  }) {
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.check_circle,
-            size: 20,
+            size: 19,
             color: widget.theme.primary,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '$title: ${_formatDate(date)}$suffix',
+              '$title: $value',
             ),
           ),
         ],
@@ -574,8 +513,6 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
   Future<void> _addEgg(
     Map<String, dynamic> cycle,
   ) async {
-    final cycleId = cycle['id'] as int;
-
     final db = await DBHelper.db;
 
     final result = await db.rawQuery(
@@ -584,66 +521,57 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       FROM ovos
       WHERE ciclo_id = ?
       ''',
-      [cycleId],
+      [cycle['id']],
     );
 
-    int nextNumber = 1;
+    int number = 1;
 
     if (result.isNotEmpty &&
         result.first['maior'] != null) {
-      nextNumber =
-          ((result.first['maior'] as num).toInt()) + 1;
+      number =
+          (result.first['maior'] as num).toInt() + 1;
     }
 
-    DateTime date = _onlyDate(DateTime.now());
+    DateTime date = _today();
 
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
+          builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Registrar ovo $nextNumber'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Ovo $nextNumber',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.calendar_month,
-                      color: widget.theme.primary,
-                    ),
-                    title: const Text('Data da postura'),
-                    subtitle: Text(
-                      _formatDate(date),
-                    ),
-                    onTap: () async {
-                      final selected =
-                          await showDatePicker(
-                        context: context,
-                        initialDate: date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
+              title: Text('Ovo $number'),
+              content: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.egg,
+                  color: widget.theme.primary,
+                ),
+                title: const Text(
+                  'Data da postura',
+                ),
+                subtitle: Text(
+                  _formatDate(date),
+                ),
+                onTap: () async {
+                  final selected =
+                      await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
 
-                      if (selected != null) {
-                        setStateDialog(() {
-                          date = _onlyDate(selected);
-                        });
-                      }
-                    },
-                  ),
-                ],
+                  if (selected != null) {
+                    setDialogState(() {
+                      date = DateTime(
+                        selected.year,
+                        selected.month,
+                        selected.day,
+                      );
+                    });
+                  }
+                },
               ),
               actions: [
                 TextButton(
@@ -660,8 +588,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                     await db.insert(
                       'ovos',
                       {
-                        'ciclo_id': cycleId,
-                        'numero': nextNumber,
+                        'ciclo_id': cycle['id'],
+                        'numero': number,
                         'data_postura':
                             date.toIso8601String(),
                         'mae_id': cycle['femea_id'],
@@ -687,21 +615,19 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
     );
 
     if (saved == true) {
-      await _loadCycles();
+      await _load();
     }
   }
 
   Future<void> _ovoscopy(
     Map<String, dynamic> cycle,
   ) async {
-    final cycleId = cycle['id'] as int;
-
     final db = await DBHelper.db;
 
     final eggs = await db.query(
       'ovos',
       where: 'ciclo_id = ?',
-      whereArgs: [cycleId],
+      whereArgs: [cycle['id']],
       orderBy: 'numero ASC',
     );
 
@@ -711,25 +637,25 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Registre pelo menos um ovo antes da ovoscopia.',
+            'Nenhum ovo registrado neste ciclo.',
           ),
         ),
       );
       return;
     }
 
-    final choco = _date(
-      cycle['data_inicio_choco']?.toString(),
+    DateTime date =
+        _parse(cycle['data_inicio_choco']) ??
+            _today();
+
+    date = date.add(
+      const Duration(days: 6),
     );
 
-    DateTime date = choco != null
-        ? choco.add(const Duration(days: 6))
-        : _onlyDate(DateTime.now());
-
-    final results = <int, String>{};
+    final values = <int, String>{};
 
     for (final egg in eggs) {
-      results[egg['id'] as int] =
+      values[egg['id'] as int] =
           (egg['resultado'] ?? 'Aguardando').toString();
     }
 
@@ -740,16 +666,49 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: const Text('Ovoscopia'),
-              content: SizedBox(
-                width: 430,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          Icons.calendar_month,
-                          color: widget.theme.primary,
-                        ),
-                        title
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.visibility,
+                        color: widget.theme.primary,
+                      ),
+                      title: const Text(
+                        'Data da ovoscopia',
+                      ),
+                      subtitle: Text(
+                        _formatDate(date),
+                      ),
+                      onTap: () async {
+                        final selected =
+                            await showDatePicker(
+                          context: context,
+                          initialDate: date,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+
+                        if (selected != null) {
+                          setDialogState(() {
+                            date = DateTime(
+                              selected.year,
+                              selected.month,
+                              selected.day,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    const Divider(),
+                    ...eggs.map(
+                      (egg) {
+                        final id =
+                            egg['id'] as int;
+
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(
+                            botto
