@@ -52,12 +52,12 @@ class _DashboardState extends State<DashboardScreen> {
       );
 
       final cyclesResult = await db.rawQuery(
-        """
+        '''
         SELECT COUNT(*) AS n
         FROM ciclos
         WHERE status IS NULL
            OR status != 'FINALIZADO'
-        """,
+        ''',
       );
 
       final eggsResult = await db.rawQuery(
@@ -69,11 +69,11 @@ class _DashboardState extends State<DashboardScreen> {
       );
 
       final alertsResult = await db.rawQuery(
-        """
+        '''
         SELECT COUNT(*) AS n
         FROM lembretes
         WHERE concluido = 0
-        """,
+        ''',
       );
 
       if (!mounted) return;
@@ -212,8 +212,10 @@ class _DashboardState extends State<DashboardScreen> {
         File(theme.logoPath!).existsSync();
 
     final location = [
-      if (theme.city.trim().isNotEmpty) theme.city.trim(),
-      if (theme.state.trim().isNotEmpty) theme.state.trim(),
+      if (theme.city.trim().isNotEmpty)
+        theme.city.trim(),
+      if (theme.state.trim().isNotEmpty)
+        theme.state.trim(),
     ].join(' - ');
 
     return Container(
@@ -252,7 +254,9 @@ class _DashboardState extends State<DashboardScreen> {
               height: 62,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.18),
+                color: Colors.white.withValues(
+                  alpha: 0.18,
+                ),
               ),
               child: Icon(
                 Icons.flutter_dash,
@@ -287,8 +291,9 @@ class _DashboardState extends State<DashboardScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: theme.onPrimary
-                          .withValues(alpha: 0.90),
+                      color: theme.onPrimary.withValues(
+                        alpha: 0.90,
+                      ),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -299,8 +304,9 @@ class _DashboardState extends State<DashboardScreen> {
                   Text(
                     location,
                     style: TextStyle(
-                      color: theme.onPrimary
-                          .withValues(alpha: 0.78),
+                      color: theme.onPrimary.withValues(
+                        alpha: 0.78,
+                      ),
                       fontSize: 12,
                     ),
                   ),
@@ -338,10 +344,14 @@ class _DashboardState extends State<DashboardScreen> {
                 height: 48,
                 decoration: BoxDecoration(
                   color: alerts > 0
-                      ? Colors.orange.withValues(alpha: 0.14)
-                      : theme.primary
-                          .withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
+                      ? Colors.orange.withValues(
+                          alpha: 0.14,
+                        )
+                      : theme.primary.withValues(
+                          alpha: 0.10,
+                        ),
+                  borderRadius:
+                      BorderRadius.circular(14),
                 ),
                 child: Icon(
                   alerts > 0
@@ -408,9 +418,11 @@ class _DashboardState extends State<DashboardScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: theme.primary
-                    .withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(13),
+                color: theme.primary.withValues(
+                  alpha: 0.10,
+                ),
+                borderRadius:
+                    BorderRadius.circular(13),
               ),
               child: Icon(
                 icon,
@@ -462,9 +474,7 @@ class _DashboardState extends State<DashboardScreen> {
           IconButton(
             tooltip: 'Atualizar',
             onPressed: loading ? null : load,
-            icon: const Icon(
-              Icons.refresh,
-            ),
+            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
@@ -472,7 +482,8 @@ class _DashboardState extends State<DashboardScreen> {
         onRefresh: load,
         color: theme.primary,
         child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics:
+              const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(
             16,
             12,
@@ -485,4 +496,123 @@ class _DashboardState extends State<DashboardScreen> {
             const SizedBox(height: 22),
 
             _sectionTitle(
-              'Vis
+              'Visão geral',
+              subtitle:
+                  'Resumo atual do seu criatório.',
+            ),
+
+            Row(
+              children: [
+                _metricCard(
+                  title: 'Plantel',
+                  value: '$birds',
+                  icon: Icons.flutter_dash,
+                  color: theme.primary,
+                ),
+                const SizedBox(width: 10),
+                _metricCard(
+                  title: 'Ativas',
+                  value: '$active',
+                  icon: Icons.check_circle_outline,
+                  color: Colors.green,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                _metricCard(
+                  title: 'Reprodução',
+                  value: '$cycles',
+                  icon: Icons.favorite_outline,
+                  color: Colors.red,
+                ),
+                const SizedBox(width: 10),
+                _metricCard(
+                  title: 'Ovos',
+                  value: '$eggs',
+                  icon: Icons.egg_outlined,
+                  color: Colors.orange,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                _metricCard(
+                  title: 'Filhotes',
+                  value: '$chicks',
+                  icon: Icons.child_friendly,
+                  color: Colors.blue,
+                ),
+                const SizedBox(width: 10),
+                _metricCard(
+                  title: 'Alertas',
+                  value: '$alerts',
+                  icon: Icons.notifications_none,
+                  color: Colors.deepPurple,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 22),
+
+            _sectionTitle(
+              'Atenção',
+              subtitle:
+                  'Acompanhe as tarefas e datas importantes.',
+            ),
+
+            _alertCard(),
+
+            const SizedBox(height: 22),
+
+            _sectionTitle(
+              'Informações',
+              subtitle:
+                  'Controle profissional do criatório.',
+            ),
+
+            _infoCard(
+              icon: Icons.pets,
+              title: 'Plantel',
+              subtitle:
+                  'Aves, anilhas, gaiolas, origem, variedade e histórico.',
+            ),
+
+            const SizedBox(height: 10),
+
+            _infoCard(
+              icon: Icons.auto_awesome,
+              title: 'Reprodução',
+              subtitle:
+                  'Casais, uniões, postura, choco, ovoscopia e nascimento.',
+            ),
+
+            const SizedBox(height: 10),
+
+            _infoCard(
+              icon: Icons.account_tree_outlined,
+              title: 'Genealogia',
+              subtitle:
+                  'Pais, filhotes e descendentes organizados por histórico.',
+            ),
+
+            const SizedBox(height: 10),
+
+            _infoCard(
+              icon: Icons.notifications_active_outlined,
+              title: 'Manejo',
+              subtitle:
+                  'Acompanhe anilhamento, desmame e outras tarefas.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
