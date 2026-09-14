@@ -9,10 +9,7 @@ import '../services/notification_service.dart';
 class ReproductionScreen extends StatefulWidget {
   final AppThemeController theme;
 
-  const ReproductionScreen({
-    super.key,
-    required this.theme,
-  });
+  const ReproductionScreen({super.key, required this.theme});
 
   @override
   State<ReproductionScreen> createState() => _ReproductionScreenState();
@@ -20,154 +17,33 @@ class ReproductionScreen extends StatefulWidget {
 
 class _ReproductionScreenState extends State<ReproductionScreen> {
   List<Map<String, Object?>> cycles = [];
-  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    _prepareDatabase();
+    _load();
   }
 
-  Future<void> _prepareDatabase() async {
-    try {
-      final db = await DBHelper.db;
+  Future<void> _load() async {
+    final db = await DBHelper.db;
 
-      await _addColumnIfMissing(
-        db,
-        'ciclos',
-        'data_primeiro_ovo',
-      );
+    await _ensureCycleDateColumns(db);
 
-      await _addColumnIfMissing(
-        db,
-        'ciclos',
-        'data_inicio_choco',
-      );
+    cycles = await db.rawQuery('''
+      SELECT c.*,
+             m.anilha AS macho_anilha,
+             m.nome AS macho_nome,
+             f.anilha AS femea_anilha,
+             f.nome AS femea_nome
+      FROM ciclos c
+      LEFT JOIN aves m ON m.id = c.macho_id
+      LEFT JOIN aves f ON f.id = c.femea_id
+      ORDER BY c.id DESC
+    ''');
 
-      await _addColumnIfMissing(
-        db,
-        'ciclos',
-        'nascimento_previsto',
-      );
-
-      await _addColumnIfMissing(
-        db,
-        'ciclos',
-        'anilhamento_previsto',
-      );
-
-      await _addColumnIfMissing(
-        db,
-        'ciclos',
-        'desmame_previsto',
-      );
-
-      await load();
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        loading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Erro ao preparar reprodução: $e',
-          ),
-        ),
-      );
+    if (mounted) {
+      setState(() {});
     }
-  }
-
-  Future<void> _addColumnIfMissing(
-    Database db,
-    String table,
-    String column,
-  ) async {
-    try {
-      await db.execute(
-        'ALTER TABLE $table ADD COLUMN $column TEXT',
-      );
-    } catch (_) {
-      // A coluna já existe.
-    }
-  }
-
-  Future<void> load() async {
-    try {
-      final db = await DBHelper.db;
-
-      final result = await db.rawQuery(
-        '''
-        SELECT
-          c.*,
-          m.anilha AS macho_anilha,
-          m.nome AS macho_nome,
-          f.anilha AS femea_anilha,
-          f.nome AS femea_nome
-        FROM ciclos c
-        LEFT JOIN aves m ON m.id = c.macho_id
-        LEFT JOIN aves f ON f.id = c.femea_id
-        ORDER BY c.id DESC
-        ''',
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        cycles = result;
-        loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        loading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Erro ao carregar reprodução: $e',
-          ),
-        ),
-      );
-    }
-  }
-
-  String _date(Object? value) {
-    if (value == null) {
-      return 'Não informado';
-    }
-
-    final text = value.toString().trim();
-
-    if (text.isEmpty) {
-      return 'Não informado';
-    }
-
-    final date = DateTime.tryParse(text);
-
-    if (date == null) {
-      return 'Não informado';
-    }
-
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
-
-  DateTime? _parseDate(Object? value) {
-    if (value == null) {
-      return null;
-    }
-
-    final text = value.toString().trim();
-
-    if (text.isEmpty) {
-      return null;
-    }
-
-    return DateTime.tryParse(text);
   }
 
   Future<DateTime?> _pickDate(DateTime initial) {
@@ -179,23 +55,18 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
     );
   }
 
-  String _birdName(Map<String, Object?> bird) {
-    final ring = (bird['anilha'] ?? '').toString().trim();
-    final name = (bird['nome'] ?? '').toString().trim();
-
-    if (ring.isEmpty && name.isEmpty) {
-      return 'Ave sem identificação';
+  String _date(Object? value) {
+    if (value == null || value.toString().isEmpty) {
+      return 'Não informado';
     }
 
-    if (ring.isEmpty) {
-      return name;
+    final date = DateTime.tryParse(value.toString());
+
+    if (date == null) {
+      return 'Não informado';
     }
 
-    if (name.isEmpty) {
-      return ring;
-    }
-
-    return '$ring — $name';
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 
   Future<void> _newCycle() async {
@@ -205,40 +76,31 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       'aves',
       where: 'status = ?',
       whereArgs: ['ATIVA'],
-      orderBy: 'anilha ASC',
     );
 
-    final males = birds
-        .where(
-          (bird) =>
-              bird['sexo'].toString().toLowerCase() == 'macho',
-        )
-        .toList();
+    final males = birds.where((bird) {
+      return bird['sexo']?.toString().toLowerCase() == 'macho';
+    }).toList();
 
-    final females = birds
-        .where(
-          (bird) =>
-              bird['sexo'].toString().toLowerCase() == 'fêmea' ||
-              bird['sexo'].toString().toLowerCase() == 'femea',
-        )
-        .toList();
+    final females = birds.where((bird) {
+      return bird['sexo']?.toString().toLowerCase() == 'fêmea';
+    }).toList();
 
     if (males.isEmpty || females.isEmpty) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cadastre pelo menos um macho e uma fêmea ativa.',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cadastre pelo menos um macho e uma fêmea ativa.',
+            ),
           ),
-        ),
-      );
-
+        );
+      }
       return;
     }
 
-    int? maleId = males.first['id'] as int?;
-    int? femaleId = females.first['id'] as int?;
+    int? maleId = males.first['id'] as int;
+    int? femaleId = females.first['id'] as int;
 
     String system = 'Monogamia';
     String cage = '';
@@ -247,18 +109,13 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
     final cageController = TextEditingController();
 
-    final created = await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (
-            dialogContext,
-            setDialogState,
-          ) {
+          builder: (dialogContext, setDialogState) {
             return AlertDialog(
-              title: const Text(
-                'Novo ciclo reprodutivo',
-              ),
+              title: const Text('Novo ciclo reprodutivo'),
               content: SizedBox(
                 width: 520,
                 child: SingleChildScrollView(
@@ -266,11 +123,7 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DropdownButtonFormField<String>(
-                        initialValue: system,
-                        decoration: const InputDecoration(
-                          labelText: 'Sistema reprodutivo',
-                          border: OutlineInputBorder(),
-                        ),
+                        value: system,
                         items: const [
                           DropdownMenuItem(
                             value: 'Monogamia',
@@ -286,82 +139,80 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                           ),
                         ],
                         onChanged: (value) {
-                          if (value == null) return;
-
-                          setDialogState(() {
-                            system = value;
-                          });
+                          if (value != null) {
+                            setDialogState(() {
+                              system = value;
+                            });
+                          }
                         },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<int>(
-                        initialValue: maleId,
                         decoration: const InputDecoration(
-                          labelText: 'Macho',
-                          border: OutlineInputBorder(),
+                          labelText: 'Sistema reprodutivo',
                         ),
-                        items: males.map(
-                          (bird) {
-                            final id = bird['id'] as int;
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<int>(
+                        value: maleId,
+                        items: males.map((bird) {
+                          final id = bird['id'] as int;
+                          final ring =
+                              bird['anilha']?.toString() ?? '-';
+                          final name =
+                              bird['nome']?.toString() ?? '';
 
-                            return DropdownMenuItem<int>(
-                              value: id,
-                              child: Text(
-                                _birdName(bird),
-                              ),
-                            );
-                          },
-                        ).toList(),
+                          return DropdownMenuItem<int>(
+                            value: id,
+                            child: Text('$ring $name'.trim()),
+                          );
+                        }).toList(),
                         onChanged: (value) {
                           setDialogState(() {
                             maleId = value;
                           });
                         },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<int>(
-                        initialValue: femaleId,
                         decoration: const InputDecoration(
-                          labelText: 'Fêmea',
-                          border: OutlineInputBorder(),
+                          labelText: 'Macho',
                         ),
-                        items: females.map(
-                          (bird) {
-                            final id = bird['id'] as int;
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<int>(
+                        value: femaleId,
+                        items: females.map((bird) {
+                          final id = bird['id'] as int;
+                          final ring =
+                              bird['anilha']?.toString() ?? '-';
+                          final name =
+                              bird['nome']?.toString() ?? '';
 
-                            return DropdownMenuItem<int>(
-                              value: id,
-                              child: Text(
-                                _birdName(bird),
-                              ),
-                            );
-                          },
-                        ).toList(),
+                          return DropdownMenuItem<int>(
+                            value: id,
+                            child: Text('$ring $name'.trim()),
+                          );
+                        }).toList(),
                         onChanged: (value) {
                           setDialogState(() {
                             femaleId = value;
                           });
                         },
+                        decoration: const InputDecoration(
+                          labelText: 'Fêmea',
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: cageController,
                         decoration: const InputDecoration(
-                          labelText: 'Gaiola da fêmea',
-                          hintText: 'Ex.: 12',
-                          border: OutlineInputBorder(),
+                          labelText: 'Gaiola',
                         ),
+                        onChanged: (value) {
+                          cage = value;
+                        },
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text(
-                          'Data de união',
-                        ),
+                        title: const Text('Data de união'),
                         subtitle: Text(
-                          DateFormat('dd/MM/yyyy').format(
-                            unionDate,
-                          ),
+                          _date(unionDate.toIso8601String()),
                         ),
                         trailing: const Icon(
                           Icons.calendar_month,
@@ -370,18 +221,18 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                           final selected =
                               await _pickDate(unionDate);
 
-                          if (selected == null) return;
-
-                          setDialogState(() {
-                            unionDate = selected;
-                          });
+                          if (selected != null) {
+                            setDialogState(() {
+                              unionDate = selected;
+                            });
+                          }
                         },
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       const Text(
-                        'A data de união serve para registrar '
-                        'quando o casal foi formado. Ela não será '
-                        'usada para calcular a ovoscopia ou o nascimento.',
+                        'A ovoscopia não será calculada pela data '
+                        'de união. Ela será calculada 6 dias após '
+                        'o início do choco.',
                       ),
                     ],
                   ),
@@ -390,27 +241,15 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(
-                      dialogContext,
-                      false,
-                    );
+                    Navigator.pop(dialogContext, false);
                   },
-                  child: const Text(
-                    'Cancelar',
-                  ),
+                  child: const Text('Cancelar'),
                 ),
                 FilledButton(
                   onPressed: () {
-                    cage = cageController.text.trim();
-
-                    Navigator.pop(
-                      dialogContext,
-                      true,
-                    );
+                    Navigator.pop(dialogContext, true);
                   },
-                  child: const Text(
-                    'Criar ciclo',
-                  ),
+                  child: const Text('Criar ciclo'),
                 ),
               ],
             );
@@ -421,18 +260,16 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
     cageController.dispose();
 
-    if (created != true) {
-      return;
-    }
-
-    if (maleId == null || femaleId == null) {
+    if (confirmed != true ||
+        maleId == null ||
+        femaleId == null) {
       return;
     }
 
     final cycleId = await db.insert(
       'ciclos',
       {
-        'gaiola': cage,
+        'gaiola': cage.trim(),
         'sistema': system,
         'macho_id': maleId,
         'femea_id': femaleId,
@@ -441,144 +278,108 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       },
     );
 
-    await load();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Ciclo $cycleId criado com sucesso.',
-        ),
-      ),
+    await NotificationService.instance.schedule(
+      cycleId,
+      'Ciclo iniciado',
+      'Acompanhe a postura e registre o início do choco.',
+      unionDate,
     );
+
+    await _load();
   }
 
-  Future<void> _registerEgg(
+  Future<void> _registerChoco(
     Map<String, Object?> cycle,
   ) async {
-    final numberController = TextEditingController();
-
     DateTime firstEgg = DateTime.now();
     DateTime chocoStart = firstEgg;
 
-    final saved = await showDialog<bool>(
+    final numberController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (
-            dialogContext,
-            setDialogState,
-          ) {
+          builder: (dialogContext, setDialogState) {
             return AlertDialog(
               title: const Text(
-                'Registrar postura',
+                'Registrar primeiro ovo e início do choco',
               ),
-              content: SizedBox(
-                width: 500,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: numberController,
-                        keyboardType:
-                            TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Número do ovo',
-                          hintText: 'Ex.: 1',
-                          border: OutlineInputBorder(),
-                        ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: numberController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Número do primeiro ovo',
                       ),
-                      const SizedBox(height: 12),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text(
-                          'Primeiro ovo',
-                        ),
-                        subtitle: Text(
-                          DateFormat('dd/MM/yyyy').format(
-                            firstEgg,
-                          ),
-                        ),
-                        trailing: const Icon(
-                          Icons.egg_outlined,
-                        ),
-                        onTap: () async {
-                          final selected =
-                              await _pickDate(firstEgg);
+                    ),
+                    const SizedBox(height: 10),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Primeiro ovo'),
+                      subtitle: Text(
+                        _date(firstEgg.toIso8601String()),
+                      ),
+                      trailing: const Icon(Icons.egg_outlined),
+                      onTap: () async {
+                        final selected =
+                            await _pickDate(firstEgg);
 
-                          if (selected == null) return;
-
+                        if (selected != null) {
                           setDialogState(() {
                             firstEgg = selected;
 
-                            if (chocoStart.isBefore(
-                              selected,
-                            )) {
-                              chocoStart = selected;
+                            if (chocoStart.isBefore(firstEgg)) {
+                              chocoStart = firstEgg;
                             }
                           });
-                        },
+                        }
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Início do choco'),
+                      subtitle: Text(
+                        _date(chocoStart.toIso8601String()),
                       ),
-                      const SizedBox(height: 4),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text(
-                          'Início do choco',
-                        ),
-                        subtitle: Text(
-                          DateFormat('dd/MM/yyyy').format(
-                            chocoStart,
-                          ),
-                        ),
-                        trailing: const Icon(
-                          Icons.nest_cam_wired_stand,
-                        ),
-                        onTap: () async {
-                          final selected =
-                              await _pickDate(chocoStart);
+                      trailing: const Icon(
+                        Icons.nest_cam_wired_stand,
+                      ),
+                      onTap: () async {
+                        final selected =
+                            await _pickDate(chocoStart);
 
-                          if (selected == null) return;
-
+                        if (selected != null) {
                           setDialogState(() {
                             chocoStart = selected;
                           });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'O início do choco é a referência '
-                        'principal para os cálculos. '
-                        'A ovoscopia será marcada para +6 dias. '
-                        'O nascimento será estimado entre +13 e +15 dias.',
-                      ),
-                    ],
-                  ),
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Regra do sistema: início do choco + 6 dias '
+                      '= ovoscopia; início do choco + 13 a 15 dias '
+                      '= nascimento previsto.',
+                    ),
+                  ],
                 ),
               ),
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(
-                      dialogContext,
-                      false,
-                    );
+                    Navigator.pop(dialogContext, false);
                   },
-                  child: const Text(
-                    'Cancelar',
-                  ),
+                  child: const Text('Cancelar'),
                 ),
                 FilledButton(
                   onPressed: () {
-                    Navigator.pop(
-                      dialogContext,
-                      true,
-                    );
+                    Navigator.pop(dialogContext, true);
                   },
-                  child: const Text(
-                    'Salvar postura',
-                  ),
+                  child: const Text('Salvar'),
                 ),
               ],
             );
@@ -587,79 +388,65 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       },
     );
 
-    numberController.dispose();
-
-    if (saved != true) {
+    if (confirmed != true) {
+      numberController.dispose();
       return;
     }
 
+    final typedNumber =
+        int.tryParse(numberController.text.trim());
+
+    numberController.dispose();
+
     if (chocoStart.isBefore(firstEgg)) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'O início do choco não pode ser anterior ao primeiro ovo.',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'O início do choco não pode ser anterior '
+              'ao primeiro ovo.',
+            ),
           ),
-        ),
-      );
-
+        );
+      }
       return;
     }
 
     final db = await DBHelper.db;
 
-    final eggCount = Sqflite.firstIntValue(
-          await db.rawQuery(
-            'SELECT COUNT(*) FROM ovos WHERE ciclo_id = ?',
-            [cycle['id']],
-          ),
-        ) ??
-        0;
-
-    final typedNumber =
-        int.tryParse(numberController.text.trim());
-
-    final eggNumber =
-        typedNumber ?? eggCount + 1;
-
-    final ovoscopyDate = chocoStart.add(
-      const Duration(days: 6),
+    final ovos = await db.query(
+      'ovos',
+      where: 'ciclo_id = ?',
+      whereArgs: [cycle['id']],
     );
 
-    final birthMin = chocoStart.add(
-      const Duration(days: 13),
-    );
+    final number = typedNumber ?? ovos.length + 1;
 
-    final birthReference = chocoStart.add(
-      const Duration(days: 14),
-    );
+    final ovoscopy =
+        chocoStart.add(const Duration(days: 6));
 
-    final birthMax = chocoStart.add(
-      const Duration(days: 15),
-    );
+    final birthReference =
+        chocoStart.add(const Duration(days: 14));
 
-    final banding = birthReference.add(
-      const Duration(days: 5),
-    );
+    final banding =
+        birthReference.add(const Duration(days: 5));
 
-    final weaning = birthReference.add(
-      const Duration(days: 32),
-    );
+    final weaning =
+        birthReference.add(const Duration(days: 32));
 
     await db.insert(
       'ovos',
       {
         'ciclo_id': cycle['id'],
-        'numero': eggNumber,
-        'data_postura':
-            firstEgg.toIso8601String(),
+        'numero': number,
+        'data_postura': firstEgg.toIso8601String(),
         'mae_id': cycle['femea_id'],
         'pai_id': cycle['macho_id'],
-        'ovoscopia_data':
-            ovoscopyDate.toIso8601String(),
+        'ovoscopia_data': ovoscopy.toIso8601String(),
       },
     );
+
+    await _ensureCycleDateColumns(db);
 
     await db.update(
       'ciclos',
@@ -680,75 +467,38 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       whereArgs: [cycle['id']],
     );
 
-    await _createReminders(
+    await _scheduleFromChoco(
       cycle['id'] as int,
-      ovoscopyDate,
-      birthReference,
-      banding,
-      weaning,
+      chocoStart,
     );
 
-    await load();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Postura registrada.\n'
-          'Ovoscopia: ${_date(ovoscopyDate.toIso8601String())}\n'
-          'Nascimento: ${_date(birthMin.toIso8601String())} '
-          'a ${_date(birthMax.toIso8601String())}',
-        ),
-      ),
-    );
+    await _load();
   }
 
-  Future<void> _createReminders(
-    int cycleId,
-    DateTime ovoscopy,
-    DateTime birth,
-    DateTime banding,
-    DateTime weaning,
+  Future<void> _ensureCycleDateColumns(
+    Database db,
   ) async {
-    final db = await DBHelper.db;
+    final columns =
+        await db.rawQuery('PRAGMA table_info(ciclos)');
 
-    final reminders = [
-      {
-        'title': 'Ovoscopia',
-        'type': 'OVOSCOPIA',
-        'date': ovoscopy,
-      },
-      {
-        'title': 'Nascimento previsto',
-        'type': 'NASCIMENTO',
-        'date': birth,
-      },
-      {
-        'title': 'Anilhamento',
-        'type': 'ANILHAMENTO',
-        'date': banding,
-      },
-      {
-        'title': 'Desmame',
-        'type': 'DESMAME',
-        'date': weaning,
-      },
-    ];
+    final names = columns
+        .map((row) => row['name']?.toString())
+        .whereType<String>()
+        .toSet();
 
-    for (final reminder in reminders) {
-      final date =
-          reminder['date'] as DateTime;
+    const required = {
+      'data_primeiro_ovo',
+      'data_inicio_choco',
+      'nascimento_previsto',
+      'anilhamento_previsto',
+      'desmame_previsto',
+    };
 
-      final title =
-          reminder['title'] as String;
-
-      final type =
-          reminder['type'] as String;
-
-      final id = await db.insert(
-        'lembretes',
-        {
-          'ciclo_id': cycleId,
-          'titulo': title,
-          'data': date.toIso860
+    for (final column in required) {
+      if (!names.contains(column)) {
+        await db.execute(
+          'ALTER TABLE ciclos ADD COLUMN $column TEXT',
+        );
+      }
+    }
+  }
