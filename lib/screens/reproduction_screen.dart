@@ -78,13 +78,15 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       whereArgs: ['ATIVA'],
     );
 
-    final males = birds.where((bird) {
-      return bird['sexo']?.toString().toLowerCase() == 'macho';
-    }).toList();
+    final males = birds.where(
+      (bird) =>
+          (bird['sexo']?.toString().toLowerCase() ?? '') == 'macho',
+    ).toList();
 
-    final females = birds.where((bird) {
-      return bird['sexo']?.toString().toLowerCase() == 'fêmea';
-    }).toList();
+    final females = birds.where(
+      (bird) =>
+          (bird['sexo']?.toString().toLowerCase() ?? '') == 'fêmea',
+    ).toList();
 
     if (males.isEmpty || females.isEmpty) {
       if (mounted) {
@@ -104,7 +106,6 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
 
     String system = 'Monogamia';
     String cage = '';
-
     DateTime unionDate = DateTime.now();
 
     final cageController = TextEditingController();
@@ -214,9 +215,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                         subtitle: Text(
                           _date(unionDate.toIso8601String()),
                         ),
-                        trailing: const Icon(
-                          Icons.calendar_month,
-                        ),
+                        trailing:
+                            const Icon(Icons.calendar_month),
                         onTap: () async {
                           final selected =
                               await _pickDate(unionDate);
@@ -323,7 +323,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
                       subtitle: Text(
                         _date(firstEgg.toIso8601String()),
                       ),
-                      trailing: const Icon(Icons.egg_outlined),
+                      trailing:
+                          const Icon(Icons.egg_outlined),
                       onTap: () async {
                         final selected =
                             await _pickDate(firstEgg);
@@ -388,15 +389,15 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       },
     );
 
-    if (confirmed != true) {
-      numberController.dispose();
-      return;
-    }
-
-    final typedNumber =
-        int.tryParse(numberController.text.trim());
+    final typedNumber = int.tryParse(
+      numberController.text.trim(),
+    );
 
     numberController.dispose();
+
+    if (confirmed != true) {
+      return;
+    }
 
     if (chocoStart.isBefore(firstEgg)) {
       if (mounted) {
@@ -413,6 +414,8 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
     }
 
     final db = await DBHelper.db;
+
+    await _ensureCycleDateColumns(db);
 
     final ovos = await db.query(
       'ovos',
@@ -446,8 +449,6 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       },
     );
 
-    await _ensureCycleDateColumns(db);
-
     await db.update(
       'ciclos',
       {
@@ -478,8 +479,9 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
   Future<void> _ensureCycleDateColumns(
     Database db,
   ) async {
-    final columns =
-        await db.rawQuery('PRAGMA table_info(ciclos)');
+    final columns = await db.rawQuery(
+      'PRAGMA table_info(ciclos)',
+    );
 
     final names = columns
         .map((row) => row['name']?.toString())
@@ -502,3 +504,185 @@ class _ReproductionScreenState extends State<ReproductionScreen> {
       }
     }
   }
+
+  Future<void> _scheduleFromChoco(
+    int cycleId,
+    DateTime chocoStart,
+  ) async {
+    final reminders = <String, DateTime>{
+      'Ovoscopia':
+          chocoStart.add(const Duration(days: 6)),
+      'Nascimento previsto':
+          chocoStart.add(const Duration(days: 14)),
+      'Anilhamento':
+          chocoStart.add(const Duration(days: 19)),
+      'Desmame':
+          chocoStart.add(const Duration(days: 46)),
+    };
+
+    final db = await DBHelper.db;
+
+    for (final entry in reminders.entries) {
+      final id = await db.insert(
+        'lembretes',
+        {
+          'ciclo_id': cycleId,
+          'titulo': entry.key,
+          'data': entry.value.toIso8601String(),
+          'tipo': entry.key,
+        },
+      );
+
+      await NotificationService.instance.schedule(
+        id,
+        entry.key,
+        'Canary Control Pro — ciclo reprodutivo',
+        entry.value,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reprodução'),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _newCycle,
+        icon: const Icon(Icons.add),
+        label: const Text('Novo ciclo'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Reprodução profissional',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'União → primeiro ovo → início do choco '
+                    '→ ovoscopia → nascimento → anilhamento '
+                    '→ desmame.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...cycles.map(
+            (cycle) => Card(
+              child: ExpansionTile(
+                title: Text(
+                  'Gaiola ${cycle['gaiola'] ?? '-'} · '
+                  '${cycle['sistema'] ?? '-'}',
+                ),
+                subtitle: Text(
+                  '♂ ${cycle['macho_anilha'] ?? '-'} × '
+                  '♀ ${cycle['femea_anilha'] ?? '-'}',
+                ),
+                children: [
+                  ListTile(
+                    title: const Text('Data de união'),
+                    subtitle: Text(
+                      _date(cycle['data_uniao']),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Primeiro ovo'),
+                    subtitle: Text(
+                      _date(cycle['data_primeiro_ovo']),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Início do choco'),
+                    subtitle: Text(
+                      _date(cycle['data_inicio_choco']),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Ovoscopia'),
+                    subtitle: Text(
+                      cycle['data_inicio_choco'] == null
+                          ? 'Aguardando início do choco'
+                          : _date(
+                              DateTime.parse(
+                                cycle['data_inicio_choco']
+                                    .toString(),
+                              )
+                                  .add(
+                                    const Duration(days: 6),
+                                  )
+                                  .toIso8601String(),
+                            ),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text(
+                      'Nascimento previsto',
+                    ),
+                    subtitle: Text(
+                      cycle['nascimento_previsto'] == null
+                          ? 'Aguardando início do choco'
+                          : '${_date(cycle['nascimento_previsto'])} '
+                              '(referência de 14 dias; faixa 13–15)',
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text(
+                      'Anilhamento previsto',
+                    ),
+                    subtitle: Text(
+                      _date(cycle['anilhamento_previsto']),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text(
+                      'Desmame previsto',
+                    ),
+                    subtitle: Text(
+                      _date(cycle['desmame_previsto']),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Status'),
+                    subtitle: Text(
+                      cycle['status']?.toString() ?? '-',
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: FilledButton.icon(
+                      onPressed: () => _registerChoco(cycle),
+                      icon: const Icon(
+                        Icons.egg_outlined,
+                      ),
+                      label: const Text(
+                        'Registrar primeiro ovo / choco',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
